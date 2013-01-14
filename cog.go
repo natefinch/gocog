@@ -2,7 +2,7 @@
 package main
 
 import (
-	"cog/process"
+	"github.com/NateFinch/gocog/process"
 	flags "github.com/jessevdk/go-flags"
 	"os"
 	"runtime"

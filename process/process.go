@@ -96,6 +96,7 @@ func cogToEnd(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int, u
 	if err != nil {
 		return fmt.Errorf("Error writing to output file for %s: %s", name, err)
 	}
+	return nil
 }
 
 func cogPlainText(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int) error {
@@ -218,13 +219,13 @@ func findLine(r *bufio.Reader, marker int, startLine int) (string, int, error) {
 			}
 		}
 	}
-	return line, count, err
+	return "", count, err
 }
 
 func createNew(filename string) (*os.File, error) {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		return nil, fmt.Errorf("File '%s' already exists.", filename)
+	if os.IsExist(err) {
+		return f, fmt.Errorf("File '%s' already exists.", filename)
 	}
-	return f, nil
+	return f, err
 }
