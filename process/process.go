@@ -6,87 +6,110 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
 const (
-	START = iota
-	END
-	COG_END
+	START   = "[[[gocog"
+	END     = "gocog]]]"
+	COG_END = "[[[end]]]"
 )
 
-var markers = []string{"[[[cog", "]]]", "[[[end]]]"}
-
-func Filename(f string, opt *Options) error {
-	in, err := os.Open(f)
-	if err != nil {
-		log.Println("Error reading file", f, err)
-		return err
-	}
-	defer in.Close()
-	r := bufio.NewReader(in)
-
-	log.Println("Processing file", f)
-	return Cog(r, f, opt)
+func Cog(file string, opt *Options) error {
+	d := &data{file, opt}
+	return d.cog()
 }
 
-func Cog(r *bufio.Reader, f string, opt *Options) error {
-	tmpFile := f + "_cog"
-	out, err := createNew(tmpFile)
-	if err != nil {
-		return fmt.Errorf("Error creating cog output file: %s", err)
-	}
+type data struct {
+	File string
+	Opt  *Options
+}
 
-	w := bufio.NewWriter(out)
+func (d *data) cog() error {
+	log.Printf("Processing file '%s'", d.File)
 
-	output, err := cog(r, w, f, opt)
-	out.Close()
+	output, err := d.tryCog()
 
 	if err == io.EOF {
-		if output {
-			if err := os.Remove(f); err != nil {
-				return fmt.Errorf("Error removing original file %s: %s", f, err)
+		if output != "" {
+			if err := os.Remove(d.File); err != nil {
+				return fmt.Errorf("Error removing original file %s: %s", d.File, err)
 			}
-			if err := os.Rename(tmpFile, f); err != nil {
-				return fmt.Errorf("Error renaming cog file %s: %s", tmpFile, err)
+			if err := os.Rename(output, d.File); err != nil {
+				return fmt.Errorf("Error renaming cog file %s: %s", output, err)
 			}
+			log.Printf("Skipping non-cog file: %s", d.File)
+			return nil
 		}
-		if err := os.Remove(tmpFile); err != nil {
-			return fmt.Errorf("Error removing empty cog file %s: %s", tmpFile, err)
+		if err := os.Remove(output); err != nil {
+			return fmt.Errorf("Error removing empty cog file %s: %s", output, err)
 		}
+		return nil
 	} else {
-		if err := os.Remove(tmpFile); err != nil {
-			log.Printf("Error removing partial cog file %s: %s", tmpFile, err)
+		if err := os.Remove(output); err != nil {
+			log.Printf("Error removing partial cog file %s: %s", output, err)
 		}
 		return err
 	}
 	return nil
 }
 
-func cog(r *bufio.Reader, w *bufio.Writer, name string, opt *Options) (bool, error) {
-	currentLine := 0
-	for {
-		if err := cogPlainText(r, w, name, &currentLine); err != nil {
-			return currentLine != 0, err
-		}
+func (d *data) tryCog() (string, error) {
+	in, err := os.Open(d.File)
+	if err != nil {
+		log.Printf("Error reading file '%s': %s", d.File, err)
+		return "", err
+	}
+	r := bufio.NewReader(in)
 
-		if err := cogGeneratorCode(r, w, name, &currentLine); err != nil {
+	defer in.Close()
+
+	tmpFile := d.File + "_cog"
+
+	output, err := d.writeOutput(tmpFile, r)
+	if output {
+		return tmpFile, err
+	}
+	return "", err
+}
+
+func (d *data) writeOutput(out string, r *bufio.Reader) (bool, error) {
+	f, err := createNew(out)
+	if err != nil {
+		return false, fmt.Errorf("Error creating cog output file: %s", err)
+	}
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+
+	return d.gen(r, w)
+}
+
+func (d *data) gen(r *bufio.Reader, w *bufio.Writer) (bool, error) {
+	firstRun := true
+	for {
+		if err := cogPlainText(r, w, firstRun); err != nil {
+			return !firstRun, err
+		}
+		firstRun = false
+
+		if err := cogGeneratorCode(r, w, d.File); err != nil {
 			return true, err
 		}
 
-		if err := cogToEnd(r, w, name, &currentLine, opt.UseEOF); err != nil {
+		if err := cogToEnd(r, w, d.Opt.UseEOF); err != nil {
 			return true, err
 		}
 	}
 	panic("Can't get here!")
 }
 
-func cogToEnd(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int, useEOF bool) error {
+func cogToEnd(r *bufio.Reader, w *bufio.Writer, useEOF bool) error {
 	// we'll drop all but the COG_END line, so no need to keep them in memory
-	line, count, err := findLine(r, COG_END, *currentLine)
-	*currentLine += count
+	line, err := findLine(r, COG_END)
 	if err == io.EOF && !useEOF {
-		return fmt.Errorf("Unexpected EOF while looking for %s in file %s", markers[COG_END], name)
+		return fmt.Errorf("Unexpected EOF while looking for end of generated code.")
 	}
 	if err != nil && err != io.EOF {
 		return err
@@ -94,63 +117,53 @@ func cogToEnd(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int, u
 
 	_, err = w.Write([]byte(line))
 	if err != nil {
-		return fmt.Errorf("Error writing to output file for %s: %s", name, err)
+		return fmt.Errorf("Error writing to output file: %s", err)
 	}
 	return nil
 }
 
-func cogPlainText(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int) error {
-	lines, err := readUntil(r, START, *currentLine)
-	if err != nil && err != io.EOF {
+func cogPlainText(r *bufio.Reader, w *bufio.Writer, firstRun bool) error {
+	lines, err := readUntil(r, START)
+	if err == io.EOF && firstRun {
+		// default case - no cog code, don't bother to write out anything
 		return err
 	}
-
-	if err == io.EOF && *currentLine == 0 {
-		// default case - no cog code, don't bother to write out anything
-		return nil
-	}
-
-	*currentLine += len(lines)
 
 	// we can just write out the non-cog code to the output file
 	// this also writes out the cog start line
 	for _, line := range lines {
 		if _, err := w.Write([]byte(line)); err != nil {
-			return fmt.Errorf("Error writing to output file for %s: %s", name, err)
+			return fmt.Errorf("Error writing to output file: %s", err)
 		}
 	}
 
 	return err
 }
 
-func cogGeneratorCode(r *bufio.Reader, w *bufio.Writer, name string, currentLine *int) error {
-	startLine := *currentLine
-
-	lines, err := readUntil(r, END, startLine)
+func cogGeneratorCode(r *bufio.Reader, w *bufio.Writer, name string) error {
+	lines, err := readUntil(r, END)
 	if err == io.EOF {
-		return fmt.Errorf("Unexpected EOF while looking for %s in file %s", markers[END], name)
+		return fmt.Errorf("Unexpected EOF while looking for generator code.")
 	}
 	if err != nil {
 		return err
 	}
 
-	*currentLine += len(lines)
-
 	// we have to write this out both to the output file and to the code file that we'll be running
 	for _, line := range lines {
 		if _, err := w.Write([]byte(line)); err != nil {
-			return fmt.Errorf("Error writing to output file for %s: %s", name, err)
+			return fmt.Errorf("Error writing to output file: %s", err)
 		}
 	}
 
 	// todo: handle other languages
-	gen := fmt.Sprintf("%s_cog_%d%s", name, startLine, ".go")
+	gen := fmt.Sprintf("%s_cog_%s", name, ".go")
 
 	// write all but the last line to the generator file
 	if err := writeAllNew(gen, lines[:len(lines)-1]); err != nil {
 		return fmt.Errorf("Error writing code generation file: %s", err)
 	}
-
+	defer os.Remove(gen)
 	if err := generate(w, gen); err != nil {
 		return fmt.Errorf("Error generating code from source: %s", err)
 	}
@@ -158,7 +171,10 @@ func cogGeneratorCode(r *bufio.Reader, w *bufio.Writer, name string, currentLine
 }
 
 func generate(w *bufio.Writer, name string) error {
-	return nil
+	cmd := exec.Command("go", "run", name)
+	cmd.Stdout = w
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func writeAllNew(name string, lines []string) error {
@@ -182,44 +198,33 @@ func writeAllNew(name string, lines []string) error {
 	return nil
 }
 
-func readUntil(r *bufio.Reader, marker int, startLine int) ([]string, error) {
-	lines := make([]string, 100)
+func readUntil(r *bufio.Reader, marker string) ([]string, error) {
+	lines := make([]string, 0, 50)
 	var err error
 	for err == nil {
-		line, err := r.ReadString('\n')
-		lines = append(lines, line)
-		if err == nil || err == io.EOF {
-			for i, s := range markers {
-				if strings.Contains(line, s) {
-					if i == marker {
-						return lines, nil
-					}
-					return lines, fmt.Errorf("Unexpected Cog marker %s on line %d", markers[i], startLine+len(lines))
-				}
-			}
+		var line string
+		line, err = r.ReadString('\n')
+		if line != "" {
+			lines = append(lines, line)
+		}
+		if strings.Contains(line, marker) {
+			return lines, err
 		}
 	}
 	return lines, err
 }
 
-func findLine(r *bufio.Reader, marker int, startLine int) (string, int, error) {
-	count := 0
+func findLine(r *bufio.Reader, marker string) (string, error) {
 	var err error
 	for err == nil {
 		line, err := r.ReadString('\n')
-		count++
 		if err == nil || err == io.EOF {
-			for i, s := range markers {
-				if strings.Contains(line, s) {
-					if i == marker {
-						return line, count, nil
-					}
-					return line, count, fmt.Errorf("Unexpected Cog marker %s on line %d", markers[i], startLine+count)
-				}
+			if strings.Contains(line, marker) {
+				return line, nil
 			}
 		}
 	}
-	return "", count, err
+	return "", err
 }
 
 func createNew(filename string) (*os.File, error) {
