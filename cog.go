@@ -19,7 +19,7 @@ func init() {
 func main() {
 	opts := new(process.Options)
 	p := flags.NewParser(opts, flags.Default)
-	p.Usage = "[OPTIONS] [INFILE] ..."
+	p.Usage = "[OPTIONS] [INFILE1] ..."
 
 	remaining, err := p.ParseArgs(os.Args)
 	if err != nil {
@@ -30,11 +30,12 @@ func main() {
 	// strip off the executable name
 	remaining = remaining[1:]
 
+	if len(remaining) < 1 {
+		p.WriteHelp(os.Stderr)
+		os.Exit(1)
+	}
+
 	for _, s := range remaining {
-		if err := process.Cog(s, opts); err != nil {
-			log.Printf("Error processing '%s': %s", s, err)
-		} else {
-			log.Printf("Finished processing '%s' successfully.", s)
-		}
+		process.Cog(s, opts)
 	}
 }
