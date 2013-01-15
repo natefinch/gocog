@@ -12,7 +12,7 @@ type Options struct {
 	//	Unix     bool              `short:"U" description:"Write the output with Unix newlines (only LF line-endings)."`
 	//	WriteCmd string            `short:"w" description:"Use CMD if the output file needs to be made writable. A %s in the CMD will be filled with the filename."`
 	// Excise bool `short:"x" description:"Excise all the generated output without running the generators."`
-	UseEOF bool `short:"z" description:"The [[[end]]] marker can be omitted, and is assumed at eof."`
-	//	Version  bool              `short:"v" description:"Print the version of cog and exit"`
+	UseEOF  bool   `short:"z" description:"The [[[end]]] marker can be omitted, and is assumed at eof."`
+	Verbose []bool `short:"v" description:"defines level of verbosity (v for standard, vv for really verbose)"`
 	// Serial bool `short:"S" description:"Write to the specified cog files serially (default is parallel)"`
 }
