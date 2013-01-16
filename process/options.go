@@ -15,5 +15,5 @@ type Options struct {
 	UseEOF  bool `short:"z" description:"The [[[end]]] marker can be omitted, and is assumed at eof."`
 	Verbose bool `short:"v" description:"toggles verbose output (overridden by -q)"`
 	Quiet   bool `short:"q" description:"turns off all output"`
-	// Serial bool `short:"S" description:"Write to the specified cog files serially (default is parallel)"`
+	Serial  bool `short:"S" description:"Write to the specified cog files serially (default is parallel)"`
 }

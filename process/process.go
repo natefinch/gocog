@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 )
 
 const (
@@ -17,10 +18,12 @@ const (
 )
 
 var (
-	NoCogCode = errors.New("NoCogCode")
+	NoCogCode     = errors.New("No cog code found in file")
+	UnexpectedEOF = errors.New("Unexpected EOF in file")
 )
 
-func Cog(file string, opt *Options) error {
+func Cog(file string, opt *Options, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	var logger *log.Logger
 	if opt.Quiet {
 		logger = log.New(ioutil.Discard, "", log.LstdFlags)
@@ -44,14 +47,14 @@ func (d *data) Tracef(format string, v ...interface{}) {
 }
 
 func (d *data) cog() error {
-	d.log.Printf("Processing file '%s'", d.File)
+	d.Tracef("Processing file '%s'", d.File)
 
 	output, err := d.tryCog()
 	d.Tracef("Output file: '%s'", output)
 
 	if err == NoCogCode {
 		if err := os.Remove(output); err != nil {
-			d.log.Printf("Error removing temporary output file '%s': %s", output, err)
+			d.log.Println(err)
 		}
 		d.log.Printf("No generator code found in file '%s'", d.File)
 		return err
@@ -60,21 +63,21 @@ func (d *data) cog() error {
 	// this is the success case - got to the end of the file without any other errors
 	if err == io.EOF {
 		if err := os.Remove(d.File); err != nil {
-			d.log.Printf("Error removing original file '%s': %s", d.File, err)
+			d.log.Printf("Error removing original file: %s", d.File, err)
 			return err
 		}
 		d.Tracef("Renaming output file '%s' to original filename '%s'", output, d.File)
 		if err := os.Rename(output, d.File); err != nil {
-			d.log.Printf("Error renaming cog file '%s': %s", output, err)
+			d.log.Printf("Error renaming cog file: %s", output, err)
 			return err
 		}
-		d.Tracef("Successfully processed '%s'", d.File)
+		d.log.Printf("Successfully processed '%s'", d.File)
 		return nil
 	} else {
 		d.log.Printf("Error processing cog file '%s': %s", d.File, err)
 		if output != "" {
 			if err := os.Remove(output); err != nil {
-				d.log.Printf("Error removing partial cog file '%s': %s", output, err)
+				d.log.Println(err)
 			}
 		}
 		return err
@@ -85,7 +88,6 @@ func (d *data) cog() error {
 func (d *data) tryCog() (string, error) {
 	in, err := os.Open(d.File)
 	if err != nil {
-		d.log.Printf("Error reading file '%s': %s", d.File, err)
 		return "", err
 	}
 	defer in.Close()
@@ -96,7 +98,7 @@ func (d *data) tryCog() (string, error) {
 	d.Tracef("Writing output to %s", output)
 	out, err := createNew(output)
 	if err != nil {
-		return "", fmt.Errorf("Error creating cog output file: %s", err)
+		return "", err
 	}
 	defer out.Close()
 
@@ -134,7 +136,7 @@ func (d *data) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) error {
 	// this also writes out the cog start line
 	for _, line := range lines {
 		if _, err := w.Write([]byte(line)); err != nil {
-			return fmt.Errorf("Error writing to output file: %s", err)
+			return err
 		}
 	}
 	d.Tracef("Wrote %d lines to output file", len(lines))
@@ -145,7 +147,7 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 	d.Tracef("cogging generator code")
 	lines, err := readUntil(r, GOCOG_END)
 	if err == io.EOF {
-		return fmt.Errorf("Unexpected EOF while looking for generator code.")
+		return UnexpectedEOF
 	}
 	if err != nil {
 		return err
@@ -153,7 +155,7 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 	// we have to write this out both to the output file and to the code file that we'll be running
 	for _, line := range lines {
 		if _, err := w.Write([]byte(line)); err != nil {
-			return fmt.Errorf("Error writing to output file: %s", err)
+			return err
 		}
 	}
 	d.Tracef("Wrote %d lines to output file", len(lines))
@@ -163,7 +165,7 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 
 	// write all but the last line to the generator file
 	if err := writeNewFile(gen, lines[:len(lines)-1]); err != nil {
-		return fmt.Errorf("Error writing code generation file: %s", err)
+		return err
 	}
 	defer os.Remove(gen)
 
@@ -178,15 +180,14 @@ func (d *data) cogToEnd(r *bufio.Reader, w io.Writer, useEOF bool) error {
 	// we'll drop all but the COG_END line, so no need to keep them in memory
 	line, err := findLine(r, END)
 	if err == io.EOF && !useEOF {
-		return fmt.Errorf("Unexpected EOF while looking for end of generated code.")
+		return UnexpectedEOF
 	}
 	if err != nil && err != io.EOF {
 		return err
 	}
 
-	_, err2 := w.Write([]byte(line))
-	if err2 != nil {
-		return fmt.Errorf("Error writing to output file: %s", err2)
+	if _, err := w.Write([]byte(line)); err != nil {
+		return err
 	}
 
 	d.Tracef("Wrote 1 line to output file")
