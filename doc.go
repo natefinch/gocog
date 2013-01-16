@@ -3,7 +3,7 @@
 Command gocog creates an executable that will generate text from sourcecode inlined in another file.
 
 Usage:
-	gocog [OPTIONS] [INFILE1] [@FILELIST] ...
+	gocog [OPTIONS] [INFILE1 | @FILELIST] ...
 
 	Runs gocog over each infile.
 	Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
