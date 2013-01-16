@@ -62,11 +62,12 @@ func readUntil(r *bufio.Reader, marker string) ([]string, error) {
 
 func findLine(r *bufio.Reader, marker string) (string, error) {
 	var err error
+	var line string
 	for err == nil {
-		line, err := r.ReadString('\n')
+		line, err = r.ReadString('\n')
 		if err == nil || err == io.EOF {
 			if strings.Contains(line, marker) {
-				return line, nil
+				return line, err
 			}
 		}
 	}

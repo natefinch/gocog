@@ -198,11 +198,14 @@ func (d *data) cogToEnd(r *bufio.Reader, w io.Writer, useEOF bool) error {
 		return err
 	}
 
-	if _, err := w.Write([]byte(line)); err != nil {
-		return err
+	if len(line) > 0 {
+		if _, err := w.Write([]byte(line)); err != nil {
+			return err
+		}
+		d.Tracef("Wrote 1 line to output file")
+	} else {
+		d.Tracef("No gocog end statement, treating EOF as end statement.")
 	}
-
-	d.Tracef("Wrote 1 line to output file")
 
 	// return original error from findLine
 	// that way we return EOF if we get to the end of the file
