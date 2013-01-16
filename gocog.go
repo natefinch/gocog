@@ -33,7 +33,7 @@ func init() {
 }
 
 func main() {
-	opts := &process.Options{}
+	opts := &processor.Options{}
 	p := flags.NewParser(opts, flags.Default)
 	p.Usage = `[OPTIONS] [INFILE1] [@FILELIST1] ...
 
@@ -58,7 +58,11 @@ func main() {
 
 	for _, s := range remaining {
 		if s[:1] == "@" {
-			if names, err := readFile(s[1:]); err == nil {
+			filelist := s[1:]
+			if names, err := readFile(filelist, opts.Verbose); err == nil {
+				if opts.Verbose {
+					log.Printf("Files specified by filelist '%s': %v", filelist, names)
+				}
 				files = append(files, names...)
 			}
 		} else {
@@ -67,21 +71,28 @@ func main() {
 	}
 	wg := &sync.WaitGroup{}
 	wg.Add(len(files))
+	if opts.Verbose {
+		log.Printf("Final file processing list: %v", files)
+	}
 	for _, s := range files {
 		if opts.Serial {
-			process.Cog(s, opts)
-			wg.Done()
+			run(s, opts, wg)
 		} else {
-			go func() {
-				processor.Run(s, opts)
-				wg.Done()
-			}()
+			go run(s, opts, wg)
 		}
 	}
 	wg.Wait()
 }
 
-func readFile(name string) ([]string, error) {
+func run(s string, opts *processor.Options, wg *sync.WaitGroup) {
+	processor.Run(s, opts)
+	wg.Done()
+}
+
+func readFile(name string, verbose bool) ([]string, error) {
+	if verbose {
+		log.Printf("Processing filelist '%s", name)
+	}
 	if b, err := ioutil.ReadFile(name); err != nil {
 		log.Printf("Failed to read filelist '%s': %s", name, err)
 		return []string{}, err
