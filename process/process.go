@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
-	"strings"
 )
 
 const (
@@ -24,10 +22,9 @@ var (
 
 func Cog(file string, opt *Options) error {
 	var logger *log.Logger
-	switch len(opt.Verbose) {
-	case 0:
+	if opt.Quiet {
 		logger = log.New(ioutil.Discard, "", log.LstdFlags)
-	default:
+	} else {
 		logger = log.New(os.Stdout, "", log.LstdFlags)
 	}
 	d := &data{file, opt, logger}
@@ -41,7 +38,7 @@ type data struct {
 }
 
 func (d *data) Tracef(format string, v ...interface{}) {
-	if len(d.Opt.Verbose) > 1 {
+	if d.Opt.Verbose {
 		d.log.Printf(format, v...)
 	}
 }
@@ -71,7 +68,7 @@ func (d *data) cog() error {
 			d.log.Printf("Error renaming cog file '%s': %s", output, err)
 			return err
 		}
-		d.log.Printf("Successfully processed '%s'", d.File)
+		d.Tracef("Successfully processed '%s'", d.File)
 		return nil
 	} else {
 		d.log.Printf("Error processing cog file '%s': %s", d.File, err)
@@ -165,22 +162,15 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 	gen := fmt.Sprintf("%s_cog_%s", name, ".go")
 
 	// write all but the last line to the generator file
-	if err := writeAllNew(gen, lines[:len(lines)-1]); err != nil {
+	if err := writeNewFile(gen, lines[:len(lines)-1]); err != nil {
 		return fmt.Errorf("Error writing code generation file: %s", err)
 	}
 	defer os.Remove(gen)
 
-	if err := run(gen, w, (*LogWriter)(d.log)); err != nil {
+	if err := run(gen, w, d.log); err != nil {
 		return fmt.Errorf("Error generating code from source: %s", err)
 	}
 	return nil
-}
-
-type LogWriter log.Logger
-
-func (lw *LogWriter) Write(b []byte) (int, error) {
-	(*log.Logger)(lw).Print(string(b))
-	return len(b), nil
 }
 
 func (d *data) cogToEnd(r *bufio.Reader, w io.Writer, useEOF bool) error {
@@ -204,69 +194,4 @@ func (d *data) cogToEnd(r *bufio.Reader, w io.Writer, useEOF bool) error {
 	// return original error from findLine
 	// that way we return EOF if we get to the end of the file
 	return err
-}
-
-func run(name string, out io.Writer, err io.Writer) error {
-	cmd := exec.Command("go", "run", name)
-	cmd.Stdout = out
-	cmd.Stderr = err
-	return cmd.Run()
-}
-
-func writeAllNew(name string, lines []string) error {
-	out, err := createNew(name)
-	if err != nil {
-		return err
-	}
-
-	for _, line := range lines {
-		if _, err := out.Write([]byte(line)); err != nil {
-			if err2 := out.Close(); err2 != nil {
-				return fmt.Errorf("Error writing to and closing newfile %s: %s%s", name, err, err2)
-			}
-			return fmt.Errorf("Error writing to newfile %s: %s", name, err)
-		}
-	}
-
-	if err := out.Close(); err != nil {
-		return fmt.Errorf("Error closing newfile %s: %s", name, err)
-	}
-	return nil
-}
-
-func readUntil(r *bufio.Reader, marker string) ([]string, error) {
-	lines := make([]string, 0, 50)
-	var err error
-	for err == nil {
-		var line string
-		line, err = r.ReadString('\n')
-		if line != "" {
-			lines = append(lines, line)
-		}
-		if strings.Contains(line, marker) {
-			return lines, err
-		}
-	}
-	return lines, err
-}
-
-func findLine(r *bufio.Reader, marker string) (string, error) {
-	var err error
-	for err == nil {
-		line, err := r.ReadString('\n')
-		if err == nil || err == io.EOF {
-			if strings.Contains(line, marker) {
-				return line, nil
-			}
-		}
-	}
-	return "", err
-}
-
-func createNew(filename string) (*os.File, error) {
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	if os.IsExist(err) {
-		return f, fmt.Errorf("File '%s' already exists.", filename)
-	}
-	return f, err
 }
