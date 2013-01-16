@@ -1,4 +1,5 @@
-package process
+// Package processor contains the code to generate text from embedded sourcecode.
+package processor
 
 import (
 	"bufio"
@@ -8,22 +9,33 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sync"
 )
 
 const (
+	// The marker delimiting the start of generator code
 	GOCOG_START = "[[[gocog"
-	GOCOG_END   = "gocog]]]"
-	END         = "[[[end]]]"
+
+	// The marker delimiting the end of generator code and beginning of generated text
+	GOCOG_END = "gocog]]]"
+
+	// The marker delimiting the end of generated text
+	END = "[[[end]]]"
 )
 
 var (
-	NoCogCode     = errors.New("No cog code found in file")
+	// Indicates a file was processed, but no gocog markers were found in it
+	NoCogCode = errors.New("No gocog code found in file")
+
+	// Indicates a malformed gocog section, missing either the GOCOG_END or END statements
 	UnexpectedEOF = errors.New("Unexpected EOF in file")
 )
 
-func Cog(file string, opt *Options, wg *sync.WaitGroup) error {
-	defer wg.Done()
+// Process the given file with the given options
+func Run(file string, opt *Options) error {
+	if opt == nil {
+		opt = &Options{}
+	}
+
 	var logger *log.Logger
 	if opt.Quiet {
 		logger = log.New(ioutil.Discard, "", log.LstdFlags)

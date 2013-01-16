@@ -1,9 +1,25 @@
-// cog - generate code with inlined Go code.
+/* Package main creates an executable that will generate text from inline sourcecode.
+
+Usage:
+  gocog [OPTIONS] [INFILE1] [@FILELIST] ...
+
+  Runs gocog over each infile.
+  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
+
+Help Options:
+  -h, --help    Show this help message
+
+Application Options:
+  -z        The [[[end]]] marker can be omitted, and is assumed at eof.
+  -v        toggles verbose output (overridden by -q)
+  -q        turns off all output
+  -S        Write to the specified cog files serially (default is parallel)
+*/
 package main
 
 import (
-	"github.com/NateFinch/gocog/process"
 	flags "github.com/jessevdk/go-flags"
+	"github.com/natefinch/gocog/processor"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,15 +28,12 @@ import (
 	"sync"
 )
 
-var infile struct {
-}
-
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
 func main() {
-	opts := new(process.Options)
+	opts := &process.Options{}
 	p := flags.NewParser(opts, flags.Default)
 	p.Usage = `[OPTIONS] [INFILE1] [@FILELIST1] ...
 
@@ -56,9 +69,13 @@ func main() {
 	wg.Add(len(files))
 	for _, s := range files {
 		if opts.Serial {
-			process.Cog(s, opts, wg)
+			process.Cog(s, opts)
+			wg.Done()
 		} else {
-			go process.Cog(s, opts, wg)
+			go func() {
+				processor.Run(s, opts)
+				wg.Done()
+			}()
 		}
 	}
 	wg.Wait()
