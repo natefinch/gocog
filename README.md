@@ -6,7 +6,7 @@ gocog is a command line executable that processes in-line code in a file and out
 Design of gocog is heavily based on cog.py <http://nedbatchelder.com/code/cog/>.  Many thanks to Ned Batchelder for a really great design.
 
     Usage:
-      gocog [OPTIONS] [INFILE1] [@FILELIST1] ...
+      gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
       
       Runs gocog over each infile. 
       Files prepended with @ are read as newline delimited lists of files to be processed
