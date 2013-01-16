@@ -35,7 +35,7 @@ func init() {
 func main() {
 	opts := &processor.Options{}
 	p := flags.NewParser(opts, flags.Default)
-	p.Usage = `[OPTIONS] [INFILE1] [@FILELIST1] ...
+	p.Usage = `[OPTIONS] [INFILE1 | @FILELIST1] ...
 
   Runs gocog over each infile. 
   Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.`
