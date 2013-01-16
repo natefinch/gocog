@@ -47,7 +47,7 @@ You can have multiple blocks of gocog generator code inside the same file.
 Current Limitations
 ----------
 
-* Only supports the Go programming language as sourcecode
+* Only supports the Go programming language as generator code
 * Command line is hard coded to "go run output_file.go"
 * All marker tags must be on different lines
 * No support for single line comment tags in front of the sourcecode 
