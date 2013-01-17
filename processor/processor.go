@@ -9,17 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-)
-
-const (
-	// The marker delimiting the start of generator code
-	GOCOG_START = "[[[gocog"
-
-	// The marker delimiting the end of generator code and beginning of generated text
-	GOCOG_END = "gocog]]]"
-
-	// The marker delimiting the end of generated text
-	END = "[[[end]]]"
+	"strings"
 )
 
 var (
@@ -138,7 +128,7 @@ func (d *data) gen(r *bufio.Reader, w io.Writer) error {
 
 func (d *data) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) error {
 	d.Tracef("cogging plaintext")
-	lines, err := readUntil(r, GOCOG_START)
+	lines, err := readUntil(r, d.Opt.StartMark+"gocog")
 	if err == io.EOF && firstRun {
 		// default case - no cog code, don't bother to write out anything
 		return NoCogCode
@@ -157,7 +147,7 @@ func (d *data) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) error {
 
 func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error {
 	d.Tracef("cogging generator code")
-	lines, err := readUntil(r, GOCOG_END)
+	lines, err := readUntil(r, "gocog"+d.Opt.EndMark)
 	if err == io.EOF {
 		return UnexpectedEOF
 	}
@@ -173,7 +163,7 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 	d.Tracef("Wrote %d lines to output file", len(lines))
 
 	// todo: handle other languages
-	gen := fmt.Sprintf("%s_cog_%s", name, ".go")
+	gen := fmt.Sprintf("%s_cog_%s", name, d.Opt.Ext)
 
 	// write all but the last line to the generator file
 	if err := writeNewFile(gen, lines[:len(lines)-1]); err != nil {
@@ -181,7 +171,20 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 	}
 	defer os.Remove(gen)
 
-	if err := run(gen, w, d.log); err != nil {
+	cmd := d.Opt.Command
+	if strings.Contains(cmd, "%s") {
+		fmt.Sprintf(d.Opt.Command, gen)
+	}
+	args := make([]string, len(d.Opt.Args), len(d.Opt.Args))
+	for i, s := range d.Opt.Args {
+		if strings.Contains(s, "%s") {
+			args[i] = fmt.Sprintf(s, gen)
+		} else {
+			args[i] = s
+		}
+	}
+
+	if err := run(cmd, args, w, d.log); err != nil {
 		return fmt.Errorf("Error generating code from source: %s", err)
 	}
 	return nil
@@ -190,7 +193,7 @@ func (d *data) cogGeneratorCode(r *bufio.Reader, w io.Writer, name string) error
 func (d *data) cogToEnd(r *bufio.Reader, w io.Writer, useEOF bool) error {
 	d.Tracef("cogging to end")
 	// we'll drop all but the COG_END line, so no need to keep them in memory
-	line, err := findLine(r, END)
+	line, err := findLine(r, d.Opt.StartMark+"end"+d.Opt.EndMark)
 	if err == io.EOF && !useEOF {
 		return UnexpectedEOF
 	}

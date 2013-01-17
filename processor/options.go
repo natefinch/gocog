@@ -1,11 +1,15 @@
 package processor
 
 type Options struct {
-	UseEOF  bool `short:"z" description:"The [[[end]]] marker can be omitted, and is assumed at eof."`
-	Verbose bool `short:"v" description:"toggles verbose output (overridden by -q)"`
-	Quiet   bool `short:"q" description:"turns off all output"`
-	Serial  bool `short:"S" description:"Write to the specified cog files serially (default is parallel)"`
-
+	UseEOF    bool     `short:"z" long:"eof" description:"The end marker can be assumed at eof."`
+	Verbose   bool     `short:"v" long:"verbose" description:"enables verbose output"`
+	Quiet     bool     `short:"q" long:"quiet" description:"turns off all output"`
+	Serial    bool     `short:"S" long:"serial" description:"Write to the specified cog files serially"`
+	Command   string   `short:"c" long:"cmd" description:"The command used to run the generator code"`
+	Args      []string `short:"a" long:"args" description:"Comma separated arguments to cmd, %s for the code file"`
+	Ext       string   `short:"e" long:"ext" description:"Extension to append to the generator filename"`
+	StartMark string   `short:"M" long:"startmark" description:"String that starts gocog statements"`
+	EndMark   string   `short:"E" long:"endmark" description:"String that ends gocog statements"`
 	//	Checksum bool              `short:"c" description:"Checksum the output to protect it against accidental change."`
 	//	Delete   bool              `short:"d" description:"Delete the generator code from the output file."`
 	//	Define   map[string]string `short:"D" description:"Define a global string available to your generator code."`

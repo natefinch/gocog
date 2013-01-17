@@ -4,21 +4,50 @@ gocog - generate code for any language, with any language
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
 Design of gocog is heavily based on cog.py <http://nedbatchelder.com/code/cog/>.  Many thanks to Ned Batchelder for a really great design.
-
-    Usage:
-      gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
-      
-      Runs gocog over each infile. 
-      Files prepended with @ are read as newline delimited lists of files to be processed
-    
-    Help Options:
-      -h, --help    Show this help message
-    
-    Application Options:
-      -z        The [[[end]]] marker can be omitted, and is assumed at eof.
-      -v        toggles verbose output (overridden by -q)
-      -q        turns off all output
-      -S        Write to the specified cog files serially (default is concurrent)
+<!-- {{{gocog
+package main
+import(
+  "bytes"
+  "fmt"
+  "os/exec"
+)
+func main() {
+  b := &bytes.Buffer{}
+  cmd := exec.Command("gocog")
+  cmd.Stdout = b
+  cmd.Run()
+  for {
+    line, err := b.ReadString(byte('\n'))
+    if len(line) > 0 {
+      fmt.Print("\t", line)
+    }
+    if err != nil {
+      break
+    }
+  }
+}
+gocog}}} -->
+	Usage:
+	  gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
+	
+	  Runs gocog over each infile. 
+	  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
+	
+	Help Options:
+	  -h, --help         Show this help message
+	
+	Application Options:
+	  -z, --eof          The end marker can be assumed at eof.
+	  -v, --verbose      enables verbose output
+	  -q, --quiet        turns off all output
+	  -S, --serial       Write to the specified cog files serially
+	  -c, --cmd          The command used to run the generator code (go)
+	  -a, --args         Comma separated arguments to cmd, %s for the code file
+	                     ([run, %s])
+	  -e, --ext          Extension to append to the generator filename (.go)
+	  -M, --startmark    String that starts gocog statements ([[[)
+	  -E, --endmark      String that ends gocog statements (]]])
+<!-- {{{end}}} -->
 
 How it works
 ------
@@ -47,8 +76,6 @@ You can have multiple blocks of gocog generator code inside the same file.
 Current Limitations
 ----------
 
-* Only supports the Go programming language as generator code
-* Command line is hard coded to "go run filename_cog.go"
 * All marker tags must be on different lines
 * No support for single line comment tags in front of the generator code 
 
@@ -56,7 +83,7 @@ Todo
 ----
 Gocog is a work in progress. Here's some stuff I'll be adding soon
 
-* Support for any generator code language and any command line
+* (update - done!) Support for any generator code language and any command line
 * Support for generator code prefixed with the single line comment tags (instead of requring multiline)
 * Support for single line gocog statements
 * Anything commented out in options.go <https://github.com/NateFinch/gocog/blob/master/process/options.go>
@@ -67,8 +94,15 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 * Support for standardized header and footer text for extracted generator code (to remove boilerplate)
 * Support for running different generator blocks in the same file in parallel (currently they're run serially)
 
-Example
+Examples
 ------
+Gocog uses gocog! Check out README.md, main.go and doc.go to see how it is used.
+The command line I use for gocog's own use is 
+gocog @files.txt --eof --startmark={{{ --endmark=}}}
+
+(I use different start and end markers so gocog won't get tripped up by my documentation that uses the same markers)
+
+Now for a toy example:
 Using generator code written in Go to write out properties for a C# class
 
     using System;

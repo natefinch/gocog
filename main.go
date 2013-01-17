@@ -8,18 +8,17 @@ import(
 func main() {
   fmt.Println("")
   fmt.Print("/", "*", "\n")
-  fmt.Println("Command gocog creates an executable that will generate text from sourcecode inlined in another file.\n")
+  fmt.Println("Package main creates an executable that will generate text from inline sourcecode.\n")
   cmd := exec.Command("gocog")
-
   cmd.Stdout = os.Stdout
   cmd.Run()
   fmt.Print("*","/", "\n")
-  fmt.Println("package documentation")
+  fmt.Println("package main")
 }
 gocog}}} */
 
 /*
-Command gocog creates an executable that will generate text from sourcecode inlined in another file.
+Package main creates an executable that will generate text from inline sourcecode.
 
 Usage:
   gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
@@ -42,4 +41,4 @@ Application Options:
   -M, --startmark    String that starts gocog statements ([[[)
   -E, --endmark      String that ends gocog statements (]]])
 */
-package documentation
+package main

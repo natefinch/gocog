@@ -11,13 +11,14 @@ import (
 	"strings"
 )
 
-func run(name string, stdout io.Writer, errLog *log.Logger) error {
+func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error {
+	errLog.Printf("%v", args)
 	errOut := bytes.Buffer{}
-	cmd := exec.Command("go", "run", name)
-	cmd.Stdout = stdout
-	cmd.Stderr = &errOut
+	c := exec.Command(cmd, args...)
+	c.Stdout = stdout
+	c.Stderr = &errOut
 
-	err := cmd.Run()
+	err := c.Run()
 	if errOut.Len() > 0 {
 		errLog.Printf("%s", errOut.String())
 	}

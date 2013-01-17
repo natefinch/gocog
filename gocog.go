@@ -1,20 +1,3 @@
-/* Package main creates an executable that will generate text from inline sourcecode.
-
-Usage:
-  gocog [OPTIONS] [INFILE1 | @FILELIST] ...
-
-  Runs gocog over each infile.
-  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
-
-Help Options:
-  -h, --help    Show this help message
-
-Application Options:
-  -z        The [[[end]]] marker can be omitted, and is assumed at eof.
-  -v        toggles verbose output (overridden by -q)
-  -q        turns off all output
-  -S        Write to the specified cog files serially (default is parallel)
-*/
 package main
 
 import (
@@ -33,7 +16,13 @@ func init() {
 }
 
 func main() {
-	opts := &processor.Options{}
+	opts := &processor.Options{
+		Command:   "go",
+		Args:      []string{"run", "%s"},
+		Ext:       ".go",
+		StartMark: "[[[",
+		EndMark:   "]]]",
+	}
 	p := flags.NewParser(opts, flags.Default)
 	p.Usage = `[OPTIONS] [INFILE1 | @FILELIST1] ...
 
@@ -50,8 +39,12 @@ func main() {
 	remaining = remaining[1:]
 
 	if len(remaining) < 1 {
-		p.WriteHelp(os.Stderr)
+		p.WriteHelp(os.Stdout)
 		os.Exit(1)
+	}
+
+	if len(opts.Ext) > 0 && opts.Ext[:1] != "." {
+		opts.Ext = "." + opts.Ext
 	}
 
 	files := make([]string, 0, len(remaining))
