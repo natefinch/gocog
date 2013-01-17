@@ -3,9 +3,9 @@ gocog - generate code for any language, with any language
 
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
-Godoc documentation is available here: <http://godoc.org/github.com/natefinch/gocog>
+Godoc documentation is available [here](http://godoc.org/github.com/natefinch/gocog)
 
-Design of gocog is heavily based on cog.py <http://nedbatchelder.com/code/cog/>.  Many thanks to Ned Batchelder for a really great design.
+Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
 package main
 import(
@@ -88,7 +88,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 * (update - done!) Support for any generator code language and any command line
 * Support for generator code prefixed with the single line comment tags (instead of requring multiline)
 * Support for single line gocog statements
-* Anything commented out in options.go <https://github.com/NateFinch/gocog/blob/master/process/options.go>
+* Anything commented out in [options.go](processor/options.go)
 * Better support for correct indentation
 * Pre and post-run commands
 * Support for running across an entire directory / tree
@@ -98,7 +98,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 Examples
 ------
-Gocog uses gocog! Check out README.md, main.go and doc.go to see how it is used.
+Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) to see how it is used.
 The command line I use for gocog's own use is 
 gocog @files.txt --eof --startmark={{{ --endmark=}}}
 
