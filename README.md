@@ -98,7 +98,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 Examples
 ------
-Gocog uses gocog! Check out [README.md](raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) to see how it is used.
+Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) to see how it is used.
 The command line I use for gocog's own use is 
 gocog @files.txt --eof --startmark={{{ --endmark=}}}
 
