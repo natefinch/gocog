@@ -5,7 +5,7 @@ gocog is a command line executable that processes in-line code in a file and out
 
 Godoc documentation is available [here](http://godoc.org/github.com/natefinch/gocog)
 
-Get binaries [on the wiki](wiki)
+Get binaries [on the wiki](gocog/wiki)
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
