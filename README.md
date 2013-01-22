@@ -73,6 +73,13 @@ By default, each file is processed in parallel, to speed the processing of large
 
 The gocog marker tags can be preceded by any text (such as comment tags to prevent your compiler/interpreter from barfing on them).
 
+Any non-whitespace text that precedes the gocog start mark will be treated as a single line comment tag and will be replaced by an equal number of spaces in the generator code that is written out - for example:
+
+	# [[[gocog
+	# this text will be output with the # replaced by a space
+	# gocog]]]
+	# [[[end]]]
+
 You can rerun gocog over the same file multiple times. Previously generated text will be discarded and replaced by the newly generated text.
 
 You can have multiple blocks of gocog generator code inside the same file.
@@ -81,14 +88,12 @@ Current Limitations
 ----------
 
 * All marker tags must be on different lines
-* No support for single line comment tags in front of the generator code 
 
 Todo
 ----
 Gocog is a work in progress. Here's some stuff I'll be adding soon
 
-* Support for generator code prefixed with the single line comment tags (instead of requring multiline)
-* Support for single line gocog statements
+* Support for single line gocog statements e.g. [[[gocog your_code_here gocog]]]
 * Anything commented out in [options.go](processor/options.go)
 * Better support for correct indentation
 * Pre and post-run commands
@@ -99,7 +104,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 Examples
 ------
-Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) to see how it is used.
+Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) (doc.go uses single line comments as an example of how that works).
 The command line I use for gocog's own use is 
 gocog @files.txt --eof --startmark={{{ --endmark=}}}
 
@@ -151,7 +156,7 @@ Output:
         // [[[end]]]
       }
     }
-
+    
 Things to note:
 The generator code and gocog markers are all hidden from the original file's compiler by comments, so the file is always valid.
 
