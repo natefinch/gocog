@@ -24,10 +24,10 @@ func main() {
 		EndMark:   "]]]",
 	}
 	p := flags.NewParser(opts, flags.Default)
-	p.Usage = `[OPTIONS] [INFILE1 | @FILELIST1] ...
+	p.Usage = `[OPTIONS] [INFILE | @FILELIST] ...
 
   Runs gocog over each infile. 
-  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.`
+  Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.`
 
 	remaining, err := p.ParseArgs(os.Args)
 	if err != nil {

@@ -1,31 +1,31 @@
-/* {{{gocog
-package main
-import(
-  "fmt"
-  "os"
-  "os/exec"
-)
-func main() {
-  fmt.Println("")
-  fmt.Print("/", "*", "\n")
-  fmt.Println("Command gocog creates an executable that will generate text from sourcecode inlined in another file.\n")
-  cmd := exec.Command("gocog")
-
-  cmd.Stdout = os.Stdout
-  cmd.Run()
-  fmt.Print("*","/", "\n")
-  fmt.Println("package documentation")
-}
-gocog}}} */
+// {{{gocog
+//package main
+//import(
+//  "fmt"
+//  "os"
+//  "os/exec"
+//)
+//func main() {
+//  fmt.Println("")
+//  fmt.Print("/", "*", "\n")
+//  fmt.Println("Command gocog creates an executable that will generate text from sourcecode inlined in another file.\n")
+//  cmd := exec.Command("gocog")
+//
+//  cmd.Stdout = os.Stdout
+//  cmd.Run()
+//  fmt.Print("*","/", "\n")
+//  fmt.Println("package documentation")
+//}
+//gocog}}}
 
 /*
 Command gocog creates an executable that will generate text from sourcecode inlined in another file.
 
 Usage:
-  gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
+  gocog [OPTIONS] [INFILE | @FILELIST] ...
 
   Runs gocog over each infile. 
-  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
+  Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.
 
 Help Options:
   -h, --help         Show this help message

@@ -8,7 +8,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
+	"unicode/utf8"
 )
 
 func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error {
@@ -25,12 +27,23 @@ func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error 
 	return err
 }
 
-func writeNewFile(name string, lines []string) error {
+func writeNewFile(name string, lines []string, prefix string) error {
 	out, err := createNew(name)
 	if err != nil {
 		return err
 	}
+
+	prefixLen := utf8.RuneCountInString(prefix)
+
+	var reg *regexp.Regexp 
+	if prefixLen > 0 {
+		reg = regexp.MustCompile(fmt.Sprintf(`^(\s*)(%s)`, regexp.QuoteMeta(prefix)))
+	}
+
 	for _, line := range lines {
+		if prefixLen > 0 {
+			line = reg.ReplaceAllString(line, fmt.Sprintf(`$1%s`, strings.Repeat(" ", prefixLen) ))
+		}
 		if _, err := out.Write([]byte(line)); err != nil {
 			if err2 := out.Close(); err2 != nil {
 				return fmt.Errorf("Error writing to and closing newfile %s: %s%s", name, err, err2)

@@ -30,10 +30,10 @@ func main() {
 }
 gocog}}} -->
 	Usage:
-	  gocog [OPTIONS] [INFILE1 | @FILELIST1] ...
+	  gocog [OPTIONS] [INFILE | @FILELIST] ...
 	
 	  Runs gocog over each infile. 
-	  Filenames prepended with @ are assumed to be newline delimited lists of files to be processed.
+	  Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.
 	
 	Help Options:
 	  -h, --help         Show this help message
