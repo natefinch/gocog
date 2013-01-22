@@ -73,12 +73,18 @@ By default, each file is processed in parallel, to speed the processing of large
 
 The gocog marker tags can be preceded by any text (such as comment tags to prevent your compiler/interpreter from barfing on them).
 
-Any non-whitespace text that precedes the gocog start mark will be treated as a single line comment tag and will be replaced by an equal number of spaces in the generator code that is written out - for example:
+Any non-whitespace text that precedes the gocog start mark will be treated as a single line comment tag and will be removed in the generator code that is written out - for example:
 
 	# [[[gocog
-	# this text will be output with the # replaced by a space
+	# do something here
+	#     and some indent
 	# gocog]]]
 	# [[[end]]]
+
+output code:
+
+	do something here
+	    and some indent
 
 You can rerun gocog over the same file multiple times. Previously generated text will be discarded and replaced by the newly generated text.
 
