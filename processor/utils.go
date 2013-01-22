@@ -42,7 +42,7 @@ func writeNewFile(name string, lines []string, prefix string) error {
 
 	for _, line := range lines {
 		if prefixLen > 0 {
-			line = reg.ReplaceAllString(line, fmt.Sprintf(`$1%s`, strings.Repeat(" ", prefixLen) ))
+			line = reg.ReplaceAllString(line, fmt.Sprintf(`$1`))
 		}
 		if _, err := out.Write([]byte(line)); err != nil {
 			if err2 := out.Close(); err2 != nil {

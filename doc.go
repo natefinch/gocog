@@ -1,22 +1,22 @@
-// {{{gocog
-//package main
-//import(
-//  "fmt"
-//  "os"
-//  "os/exec"
-//)
-//func main() {
-//  fmt.Println("")
-//  fmt.Print("/", "*", "\n")
-//  fmt.Println("Command gocog creates an executable that will generate text from sourcecode inlined in another file.\n")
-//  cmd := exec.Command("gocog")
-//
-//  cmd.Stdout = os.Stdout
-//  cmd.Run()
-//  fmt.Print("*","/", "\n")
-//  fmt.Println("package documentation")
-//}
-//gocog}}}
+// [[[gocog
+// package main
+// import(
+//   "fmt"
+//   "os"
+//   "os/exec"
+// )
+// func main() {
+//   fmt.Println("")
+//   fmt.Print("/", "*", "\n")
+//   fmt.Println("Command gocog creates an executable that will generate text from sourcecode inlined in another file.\n")
+//   cmd := exec.Command("gocog")
+
+//   cmd.Stdout = os.Stdout
+//   cmd.Run()
+//   fmt.Print("*","/", "\n")
+//   fmt.Println("package documentation")
+// }
+// gocog]]]
 
 /*
 Command gocog creates an executable that will generate text from sourcecode inlined in another file.

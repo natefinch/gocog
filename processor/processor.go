@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -145,11 +146,12 @@ func (d *data) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (prefix
 	}
 
 	prefix = lines[len(lines)-1]
-	if index := strings.Index(prefix, mark); index == -1 {
+	if i := strings.Index(prefix, mark); i == -1 {
 		// this can happen if we're hitting EOF
 		prefix = ""
 	} else {
-		prefix = strings.TrimSpace(prefix[:index])
+		prefix = strings.TrimLeftFunc(prefix[:i], unicode.IsSpace)
+		d.Tracef("Prefix for %s: '%s'", d.File, prefix)
 	}
 
 	d.Tracef("Wrote %d lines to output file", len(lines))
