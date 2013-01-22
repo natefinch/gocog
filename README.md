@@ -3,9 +3,9 @@ gocog - generate code for any language, with any language
 
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
-Godoc documentation is available [here](http://godoc.org/github.com/natefinch/gocog)
+Binaries for popular OSes are available [on the wiki](https://github.com/natefinch/gocog/wiki)
 
-Get binaries [on the wiki](https://github.com/natefinch/gocog/wiki)
+Read the [Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
