@@ -5,7 +5,7 @@ gocog is a command line executable that processes in-line code in a file and out
 
 Godoc documentation is available [here](http://godoc.org/github.com/natefinch/gocog)
 
-Get binaries [on the wiki](gocog/wiki)
+Get binaries [on the wiki](https://github.com/natefinch/gocog/wiki)
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
@@ -94,7 +94,7 @@ Todo
 Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 * Support for single line gocog statements e.g. [[[gocog your_code_here gocog]]]
-* Anything commented out in [options.go](processor/options.go)
+* Anything commented out in [options.go](https://github.com/natefinch/gocog/blob/master/processor/options.go)
 * Better support for correct indentation
 * Pre and post-run commands
 * Support for running across an entire directory / tree
@@ -104,7 +104,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 Examples
 ------
-Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](main.go) and [doc.go](doc.go) (doc.go uses single line comments as an example of how that works).
+Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
 The command line I use for gocog's own use is 
 gocog @files.txt --eof --startmark={{{ --endmark=}}}
 
