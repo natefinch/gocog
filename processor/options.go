@@ -10,6 +10,8 @@ type Options struct {
 	Ext       string   `short:"e" long:"ext" description:"Extension to append to the generator filename"`
 	StartMark string   `short:"M" long:"startmark" description:"String that starts gocog statements"`
 	EndMark   string   `short:"E" long:"endmark" description:"String that ends gocog statements"`
+	Excise    bool     `short:"x" long:"excise" description:"Excise all the generated output without running the generators."`
+	Version   bool     `short:"V" long:"version" description:"Display the version of gocog"`
 	//	Checksum bool              `short:"c" description:"Checksum the output to protect it against accidental change."`
 	//	Delete   bool              `short:"d" description:"Delete the generator code from the output file."`
 	//	Define   map[string]string `short:"D" description:"Define a global string available to your generator code."`
@@ -18,5 +20,4 @@ type Options struct {
 	//	Suffix   string            `short:"s" description:"Suffix all generated output lines with STRING."`
 	//	Unix     bool              `short:"U" description:"Write the output with Unix newlines (only LF line-endings)."`
 	//	WriteCmd string            `short:"w" description:"Use CMD if the output file needs to be made writable. A %s in the CMD will be filled with the filename."`
-	//  Excise bool `short:"x" description:"Excise all the generated output without running the generators."`
 }

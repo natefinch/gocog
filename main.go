@@ -40,5 +40,8 @@ Application Options:
   -e, --ext          Extension to append to the generator filename (.go)
   -M, --startmark    String that starts gocog statements ([[[)
   -E, --endmark      String that ends gocog statements (]]])
+  -x, --excise       Excise all the generated output without running the
+                     generators.
+  -V, --version      Display the version of gocog
 */
 package main

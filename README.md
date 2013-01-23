@@ -51,6 +51,9 @@ gocog}}} -->
 	  -e, --ext          Extension to append to the generator filename (.go)
 	  -M, --startmark    String that starts gocog statements ([[[)
 	  -E, --endmark      String that ends gocog statements (]]])
+	  -x, --excise       Excise all the generated output without running the
+	                     generators.
+	  -V, --version      Display the version of gocog
 <!-- {{{end}}} -->
 
 How it works
@@ -104,7 +107,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 
 Examples
 ------
-Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
+Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go), [gocog.go](https://github.com/natefinch/gocog/blob/master/gocog.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
 The command line I use for gocog's own use is 
 gocog @files.txt --eof --startmark={{{ --endmark=}}}
 

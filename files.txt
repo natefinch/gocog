@@ -1,3 +1,4 @@
+gocog.go
 doc.go
 main.go
 README.md

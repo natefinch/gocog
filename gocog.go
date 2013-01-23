@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/natefinch/gocog/processor"
 	"io/ioutil"
@@ -9,6 +10,10 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+)
+
+const (
+	version = "gocog v0.9 build %s\n"
 )
 
 func init() {
@@ -35,6 +40,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	ver := ""
+	// {{{gocog
+	// package main
+	// import (
+	//   "fmt" 
+	//   "time"
+	// )
+	// func main() {
+	// 	t := time.Now()
+	// 	fmt.Printf("\tver = \"%d%02d%02d\"\n", t.Year(), int(t.Month()), t.Day())
+	// }
+	// gocog}}}
+	ver = "20130123"
+	// {{{end}}}
+	if opts.Version {
+		fmt.Printf(version, ver)
+		os.Exit(0)
+	}
 	// strip off the executable name
 	remaining = remaining[1:]
 

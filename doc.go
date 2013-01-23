@@ -1,4 +1,4 @@
-// [[[gocog
+// {{{gocog
 // package main
 // import(
 //   "fmt"
@@ -16,7 +16,7 @@
 //   fmt.Print("*","/", "\n")
 //   fmt.Println("package documentation")
 // }
-// gocog]]]
+// gocog}}}
 
 /*
 Command gocog creates an executable that will generate text from sourcecode inlined in another file.
@@ -41,5 +41,8 @@ Application Options:
   -e, --ext          Extension to append to the generator filename (.go)
   -M, --startmark    String that starts gocog statements ([[[)
   -E, --endmark      String that ends gocog statements (]]])
+  -x, --excise       Excise all the generated output without running the
+                     generators.
+  -V, --version      Display the version of gocog
 */
 package documentation

@@ -10,11 +10,11 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
 func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error {
-	errLog.Printf("%v", args)
 	errOut := bytes.Buffer{}
 	c := exec.Command(cmd, args...)
 	c.Stdout = stdout
@@ -35,7 +35,7 @@ func writeNewFile(name string, lines []string, prefix string) error {
 
 	prefixLen := utf8.RuneCountInString(prefix)
 
-	var reg *regexp.Regexp 
+	var reg *regexp.Regexp
 	if prefixLen > 0 {
 		reg = regexp.MustCompile(fmt.Sprintf(`^(\s*)(%s)`, regexp.QuoteMeta(prefix)))
 	}
@@ -58,34 +58,29 @@ func writeNewFile(name string, lines []string, prefix string) error {
 	return nil
 }
 
-func readUntil(r *bufio.Reader, marker string) ([]string, error) {
-	lines := make([]string, 0, 50)
-	var err error
+func readUntil(r *bufio.Reader, marker string) (lines []string, found bool, err error) {
+	lines = make([]string, 0, 50)
 	for err == nil {
 		var line string
 		line, err = r.ReadString('\n')
-		if line != "" {
-			lines = append(lines, line)
-		}
+		lines = append(lines, line)
 		if strings.Contains(line, marker) {
-			return lines, err
+			return lines, true, err
 		}
 	}
-	return lines, err
+	return lines, false, err
 }
 
-func findLine(r *bufio.Reader, marker string) (string, error) {
-	var err error
-	var line string
+func findLine(r *bufio.Reader, marker string) (line string, found bool, err error) {
 	for err == nil {
 		line, err = r.ReadString('\n')
 		if err == nil || err == io.EOF {
 			if strings.Contains(line, marker) {
-				return line, err
+				return line, true, err
 			}
 		}
 	}
-	return "", err
+	return "", false, err
 }
 
 func createNew(filename string) (*os.File, error) {
@@ -94,4 +89,15 @@ func createNew(filename string) (*os.File, error) {
 		return f, fmt.Errorf("File '%s' already exists.", filename)
 	}
 	return f, err
+}
+
+func getPrefix(lines []string, mark string) string {
+	prefix := ""
+	if len(lines) > 0 {
+		prefix = lines[len(lines)-1]
+		if i := strings.Index(prefix, mark); i > -1 {
+			prefix = strings.TrimLeftFunc(prefix[:i], unicode.IsSpace)
+		}
+	}
+	return prefix
 }
