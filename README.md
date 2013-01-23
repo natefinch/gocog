@@ -3,9 +3,9 @@ gocog - generate code for any language, with any language
 
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
-Godoc documentation is available [here](http://godoc.org/github.com/natefinch/gocog)
+Binaries for popular OSes are available [on the wiki](https://github.com/natefinch/gocog/wiki)
 
-Get binaries [on the wiki](https://github.com/natefinch/gocog/wiki)
+Read the [Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
@@ -76,12 +76,18 @@ By default, each file is processed in parallel, to speed the processing of large
 
 The gocog marker tags can be preceded by any text (such as comment tags to prevent your compiler/interpreter from barfing on them).
 
-Any non-whitespace text that precedes the gocog start mark will be treated as a single line comment tag and will be replaced by an equal number of spaces in the generator code that is written out - for example:
+Any non-whitespace text that precedes the gocog start mark will be treated as a single line comment tag and will be removed in the generator code that is written out - for example:
 
 	# [[[gocog
-	# this text will be output with the # replaced by a space
+	# do something here
+	#     and some indent
 	# gocog]]]
 	# [[[end]]]
+
+output code:
+
+	do something here
+	    and some indent
 
 You can rerun gocog over the same file multiple times. Previously generated text will be discarded and replaced by the newly generated text.
 
