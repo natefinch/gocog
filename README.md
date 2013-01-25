@@ -107,15 +107,14 @@ Gocog is a work in progress. Here's some stuff I'll be adding soon
 * Better support for correct indentation
 * Pre and post-run commands
 * Support for running across an entire directory / tree
-* Configuration file for saving extensive gocog config settings
+* Support for adding command line flags to files in file lists
 * Support for standardized header and footer text for extracted generator code (to remove boilerplate)
 * Support for running different generator blocks in the same file in parallel (currently they're run serially)
 
 Examples
 ------
 Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go), [gocog.go](https://github.com/natefinch/gocog/blob/master/gocog.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
-The command line I use for gocog's own use is 
-gocog @files.txt --eof --startmark={{{ --endmark=}}}
+The command line I use for gocog's own use is in [update.sh](https://github.com/natefinch/gocog/blob/master/update.sh)
 
 (I use different start and end markers so gocog won't get tripped up by my documentation that uses the same markers)
 

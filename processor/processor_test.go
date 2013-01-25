@@ -18,7 +18,7 @@ type CPTData struct {
 }
 
 func TestCogPlainText(t *testing.T) {
-	d := &data{"foo", &Options{StartMark: "[[["}, log.New(ioutil.Discard, "", log.LstdFlags)}
+	c := &context{"foo", &Options{StartMark: "[[["}, log.New(ioutil.Discard, "", log.LstdFlags)}
 
 	tests := []CPTData{
 		{"", "", "", true, NoCogCode},
@@ -35,7 +35,7 @@ func TestCogPlainText(t *testing.T) {
 		out := &bytes.Buffer{}
 
 		r := bufio.NewReader(in)
-		prefix, err := d.cogPlainText(r, out, test.first)
+		prefix, err := c.cogPlainText(r, out, test.first)
 
 		if prefix != test.prefix {
 			t.Errorf("CogPlainText Test %d: Expected prefix: '%s', Got prefix: '%s'", i, test.prefix, prefix)
@@ -74,7 +74,7 @@ func TestCogToEnd(t *testing.T) {
 		StartMark: "[[[",
 		EndMark:   "]]]",
 	}
-	d := &data{"foo", opts, log.New(ioutil.Discard, "", log.LstdFlags)}
+	c := &context{"foo", opts, log.New(ioutil.Discard, "", log.LstdFlags)}
 
 	for i, test := range tests {
 		opts.UseEOF = test.useEOF
@@ -83,7 +83,7 @@ func TestCogToEnd(t *testing.T) {
 		out := &bytes.Buffer{}
 
 		r := bufio.NewReader(in)
-		err := d.cogToEnd(r, out)
+		err := c.cogToEnd(r, out)
 
 		if err != test.err {
 			t.Errorf("CogToEnd Test %d: Expected error %v, got %v", i, test.err, err)
