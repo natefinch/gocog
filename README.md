@@ -3,9 +3,11 @@ gocog - generate code for any language, with any language
 
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
-Binaries for popular OSes are available [on the wiki](https://github.com/natefinch/gocog/wiki)
+If you don't want to work on the sourcecode, you can just download a binary for gocog and use it for your own project.<br>
+Binaries for popular OSes are available [on the wiki](https://github.com/natefinch/gocog/wiki)<br>
+They require no installation and have no prerequisites. Copy and go.
 
-Read the [Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
+[Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
@@ -169,3 +171,10 @@ Things to note:
 The generator code and gocog markers are all hidden from the original file's compiler by comments, so the file is always valid.
 
 The generator code stays in the file even after running through gocog. This keeps the generator code and the target close together so there's no need to worry about one getting lost. It also makes it a lot more clear where and how the output will be used in the original file.
+
+Building gocog
+---------------
+
+* build.sh will run gocog over its own files, and then run "go install" to install gocog on your machine.
+* You can also just build with go build to test the build.
+* The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile)
