@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
 
 func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error {
@@ -33,15 +32,13 @@ func writeNewFile(name string, lines []string, prefix string) error {
 		return err
 	}
 
-	prefixLen := utf8.RuneCountInString(prefix)
-
 	var reg *regexp.Regexp
-	if prefixLen > 0 {
-		reg = regexp.MustCompile(fmt.Sprintf(`^(\s*)(%s)`, regexp.QuoteMeta(prefix)))
+	if len(prefix) > 0 {
+		reg = regexp.MustCompile(fmt.Sprintf(`^(\s*)%s`, regexp.QuoteMeta(prefix)))
 	}
 
 	for _, line := range lines {
-		if prefixLen > 0 {
+		if reg != nil {
 			line = reg.ReplaceAllString(line, fmt.Sprintf(`$1`))
 		}
 		if _, err := out.Write([]byte(line)); err != nil {
