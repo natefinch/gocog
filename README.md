@@ -175,6 +175,6 @@ The generator code stays in the file even after running through gocog. This keep
 Building gocog
 ---------------
 
-* build.sh will run gocog over its own files, and then run "go install" to install gocog on your machine.
-* You can also just build with go build to test the build.
-* The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile)
+* just run go build or go install like a normal go package.  
+* Running update.sh will run gocog over its own files, to pick up any updates to the usage text, and to add today's date to the version number.
+* The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile) which I won't go into how to use here.
