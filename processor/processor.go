@@ -17,16 +17,13 @@ var (
 	// Indicates a file was processed, but no gocog markers were found in it
 	NoCogCode = errors.New("NoCogCode")
 
-	// Indicates a malformed gocog section, missing either the GOCOG_END or END statements
-	UnexpectedEOF = errors.New("UnexpectedEOF")
-
 	newline byte = 10
 )
 
 // Process the given file with the given options
 // This will read the file, rewriting to a temporary file
 // then run any embedded code, using the given options
-func Run(file string, opt *Options) error {
+func New(file string, opt *Options) *Processor {
 	if opt == nil {
 		opt = &Options{}
 	}
@@ -37,54 +34,53 @@ func Run(file string, opt *Options) error {
 	} else {
 		logger = log.New(os.Stdout, "", log.LstdFlags)
 	}
-	c := &context{file, opt, logger}
-	return c.cog()
+	return &Processor{file, opt, logger}
 }
 
-type context struct {
+type Processor struct {
 	File string
-	Opt  *Options
-	log  *log.Logger
+	*Options
+	*log.Logger
 }
 
-func (c *context) Tracef(format string, v ...interface{}) {
-	if c.Opt.Verbose {
-		c.log.Printf(format, v...)
+func (p *Processor) tracef(format string, v ...interface{}) {
+	if p.Verbose {
+		p.Printf(format, v...)
 	}
 }
 
-func (c *context) cog() error {
-	c.Tracef("Processing file '%s'", c.File)
+func (p *Processor) Run() error {
+	p.tracef("Processing file '%s'", p.File)
 
-	output, err := c.tryCog()
-	c.Tracef("Output file: '%s'", output)
+	output, err := p.tryCog()
+	p.tracef("Output file: '%s'", output)
 
 	if err == NoCogCode {
 		if err := os.Remove(output); err != nil {
-			c.log.Println(err)
+			p.Println(err)
 		}
-		c.log.Printf("No generator code found in file '%s'", c.File)
+		p.Printf("No generator code found in file '%s'", p.File)
 		return err
 	}
 
 	// this is the success case - got to the end of the file without any other errors
 	if err == io.EOF {
-		if err := os.Remove(c.File); err != nil {
-			c.log.Printf("Error removing original file '%s': %s", c.File, err)
+		if err := os.Remove(p.File); err != nil {
+			p.Printf("Error removing original file '%s': %s", p.File, err)
 			return err
 		}
-		c.Tracef("Renaming output file '%s' to original filename '%s'", output, c.File)
-		if err := os.Rename(output, c.File); err != nil {
-			c.log.Printf("Error renaming cog file '%s': %s", output, err)
+		p.tracef("Renaming output file '%s' to original filename '%s'", output, p.File)
+		if err := os.Rename(output, p.File); err != nil {
+			p.Printf("Error renaming cog file '%s': %s", output, err)
 			return err
 		}
-		c.log.Printf("Successfully processed '%s'", c.File)
+		p.Printf("Successfully processed '%s'", p.File)
 		return nil
 	} else {
-		c.log.Printf("Error processing cog file '%s': %s", c.File, err)
+		p.Printf("Error processing cog file '%s': %s", p.File, err)
 		if output != "" {
 			if err := os.Remove(output); err != nil {
-				c.log.Println(err)
+				p.Println(err)
 			}
 		}
 		return err
@@ -92,8 +88,8 @@ func (c *context) cog() error {
 	return nil
 }
 
-func (c *context) tryCog() (output string, err error) {
-	in, err := os.Open(c.File)
+func (p *Processor) tryCog() (output string, err error) {
+	in, err := os.Open(p.File)
 	if err != nil {
 		return "", err
 	}
@@ -101,45 +97,45 @@ func (c *context) tryCog() (output string, err error) {
 
 	r := bufio.NewReader(in)
 
-	output = c.File + "_cog"
-	c.Tracef("Writing output to %s", output)
+	output = p.File + "_cog"
+	p.tracef("Writing output to %s", output)
 	out, err := createNew(output)
 	if err != nil {
 		return "", err
 	}
 	defer out.Close()
 
-	return output, c.gen(r, out)
+	return output, p.gen(r, out)
 }
 
-func (c *context) gen(r *bufio.Reader, w io.Writer) error {
+func (p *Processor) gen(r *bufio.Reader, w io.Writer) error {
 	firstRun := true
 	for {
-		prefix, err := c.cogPlainText(r, w, firstRun)
+		prefix, err := p.cogPlainText(r, w, firstRun)
 		if err != nil {
 			return err
 		}
 		firstRun = false
 
-		if err := c.cogGeneratorCode(r, w, prefix); err != nil {
+		if err := p.cogGeneratorCode(r, w, prefix); err != nil {
 			return err
 		}
 
-		if err := c.cogToEnd(r, w); err != nil {
+		if err := p.cogToEnd(r, w); err != nil {
 			return err
 		}
 	}
 	panic("Can't get here!")
 }
 
-func (c *context) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (prefix string, err error) {
-	c.Tracef("cogging plaintext")
-	mark := c.Opt.StartMark + "gocog"
+func (p *Processor) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (prefix string, err error) {
+	p.tracef("cogging plaintext")
+	mark := p.StartMark + "gocog"
 	lines, found, err := readUntil(r, mark)
 	if err == io.EOF {
 		if found {
 			// found gocog statement, but nothing after it
-			return "", UnexpectedEOF
+			return "", io.ErrUnexpectedEOF
 		}
 		if firstRun {
 			// default case - no cog code, don't bother to write out anything
@@ -159,7 +155,7 @@ func (c *context) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (pre
 			return "", err
 		}
 	}
-	c.Tracef("Wrote %c lines to output file", len(lines))
+	p.tracef("Wrote %c lines to output file", len(lines))
 
 	if !found {
 		return "", err
@@ -172,11 +168,11 @@ func (c *context) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (pre
 // Writes out the generator code to a file with the given name
 // any lines that start with whitespace and then prefix will have
 // prefix replaced by an equal number of spaces
-func (c *context) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string) error {
-	c.Tracef("cogging generator code")
-	lines, _, err := readUntil(r, "gocog"+c.Opt.EndMark)
+func (p *Processor) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string) error {
+	p.tracef("cogging generator code")
+	lines, _, err := readUntil(r, "gocog"+p.EndMark)
 	if err == io.EOF {
-		return UnexpectedEOF
+		return io.ErrUnexpectedEOF
 	}
 	if err != nil {
 		return err
@@ -188,10 +184,10 @@ func (c *context) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string) 
 			return err
 		}
 	}
-	c.Tracef("Wrote %c lines to output file", len(lines))
+	p.tracef("Wrote %c lines to output file", len(lines))
 
-	if !c.Opt.Excise && len(lines) > 0 {
-		if err := c.generate(w, lines[:len(lines)-1], prefix); err != nil {
+	if !p.Excise && len(lines) > 0 {
+		if err := p.generate(w, lines[:len(lines)-1], prefix); err != nil {
 			return err
 		}
 	}
@@ -199,8 +195,8 @@ func (c *context) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string) 
 	return nil
 }
 
-func (c *context) generate(w io.Writer, lines []string, prefix string) error {
-	gen := fmt.Sprintf("%s_cog_%s", c.File, c.Opt.Ext)
+func (p *Processor) generate(w io.Writer, lines []string, prefix string) error {
+	gen := fmt.Sprintf("%s_cog_%s", p.File, p.Ext)
 	defer os.Remove(gen)
 
 	// write all but the last line to the generator file
@@ -209,7 +205,7 @@ func (c *context) generate(w io.Writer, lines []string, prefix string) error {
 	}
 
 	b := bytes.Buffer{}
-	if err := c.runFile(gen, &b); err != nil {
+	if err := p.runFile(gen, &b); err != nil {
 		return err
 	}
 	if _, err := w.Write(b.Bytes()); err != nil {
@@ -225,13 +221,13 @@ func (c *context) generate(w io.Writer, lines []string, prefix string) error {
 	return nil
 }
 
-func (c *context) runFile(f string, w io.Writer) error {
-	cmd := c.Opt.Command
+func (p *Processor) runFile(f string, w io.Writer) error {
+	cmd := p.Command
 	if strings.Contains(cmd, "%s") {
 		cmd = fmt.Sprintf(cmd, f)
 	}
-	args := make([]string, len(c.Opt.Args), len(c.Opt.Args))
-	for i, s := range c.Opt.Args {
+	args := make([]string, len(p.Args), len(p.Args))
+	for i, s := range p.Args {
 		if strings.Contains(s, "%s") {
 			args[i] = fmt.Sprintf(s, f)
 		} else {
@@ -239,21 +235,21 @@ func (c *context) runFile(f string, w io.Writer) error {
 		}
 	}
 
-	if err := run(cmd, args, w, c.log); err != nil {
+	if err := run(cmd, args, w, p.Logger); err != nil {
 		return fmt.Errorf("Error generating code from source: %s", err)
 	}
 	return nil
 }
 
-func (c *context) cogToEnd(r *bufio.Reader, w io.Writer) error {
-	c.Tracef("cogging to end")
+func (p *Processor) cogToEnd(r *bufio.Reader, w io.Writer) error {
+	p.tracef("cogging to end")
 	// we'll drop all but the COG_END line, so no need to keep them in memory
-	line, found, err := findLine(r, c.Opt.StartMark+"end"+c.Opt.EndMark)
+	line, found, err := findLine(r, p.StartMark+"end"+p.EndMark)
 	if err == io.EOF && !found {
-		if !c.Opt.UseEOF {
-			return UnexpectedEOF
+		if !p.UseEOF {
+			return io.ErrUnexpectedEOF
 		}
-		c.Tracef("No gocog end statement, treating EOF as end statement.")
+		p.tracef("No gocog end statement, treating EOF as end statement.")
 		return io.EOF
 	}
 	if err != nil && err != io.EOF {
@@ -264,6 +260,6 @@ func (c *context) cogToEnd(r *bufio.Reader, w io.Writer) error {
 	if _, err := w.Write([]byte(line)); err != nil {
 		return err
 	}
-	c.Tracef("Wrote 1 line to output file")
+	p.tracef("Wrote 1 line to output file")
 	return err
 }

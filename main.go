@@ -23,7 +23,7 @@ Package main creates an executable that will generate text from inline sourcecod
 Usage:
   gocog [OPTIONS] [INFILE | @FILELIST] ...
 
-  Runs gocog over each infile. 
+  Runs gocog over each infile.
   Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.
 
 Help Options:

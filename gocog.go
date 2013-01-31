@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/jessevdk/go-flags"
+	"github.com/kballard/go-shellquote"
 	"github.com/natefinch/gocog/processor"
 	"io/ioutil"
 	"log"
@@ -13,7 +15,7 @@ import (
 )
 
 const (
-	version = "gocog v0.9 build %s\n"
+	version = "gocog v1.0 build %s\n"
 )
 
 func init() {
@@ -28,13 +30,14 @@ func main() {
 		StartMark: "[[[",
 		EndMark:   "]]]",
 	}
+
 	p := flags.NewParser(opts, flags.Default)
 	p.Usage = `[OPTIONS] [INFILE | @FILELIST] ...
 
   Runs gocog over each infile. 
-  Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.`
+  Strings prepended with @ are assumed to be files continaing newline delimited lists of gocog command lines.`
 
-	remaining, err := p.ParseArgs(os.Args)
+	remaining, err := p.ParseArgs(os.Args[1:])
 	if err != nil {
 		log.Println("Error parsing args:", err)
 		os.Exit(1)
@@ -44,7 +47,7 @@ func main() {
 	// {{{gocog
 	// package main
 	// import (
-	//   "fmt" 
+	//   "fmt"
 	//   "time"
 	// )
 	// func main() {
@@ -58,71 +61,92 @@ func main() {
 		fmt.Printf(version, ver)
 		os.Exit(0)
 	}
-	// strip off the executable name
-	remaining = remaining[1:]
 
 	if len(remaining) < 1 {
 		p.WriteHelp(os.Stdout)
 		os.Exit(1)
 	}
 
-	if len(opts.Ext) > 0 && opts.Ext[:1] != "." {
-		opts.Ext = "." + opts.Ext
+	procs, err := handleCommandLine(os.Args[1:], opts)
+	if err != nil {
+		p.WriteHelp(os.Stdout)
+		os.Exit(1)
 	}
 
-	files := make([]string, 0, len(remaining))
-
-	for _, s := range remaining {
-		if s[:1] == "@" {
-			filelist := s[1:]
-			if names, err := readFile(filelist, opts.Verbose); err == nil {
-				if opts.Verbose {
-					log.Printf("Files specified by filelist '%s': %v", filelist, names)
-				}
-				files = append(files, names...)
-			}
-		} else {
-			files = append(files, s)
-		}
-	}
 	wg := &sync.WaitGroup{}
-	wg.Add(len(files))
-	if opts.Verbose {
-		log.Printf("Final file processing list: %v", files)
-	}
-	for _, s := range files {
+	wg.Add(len(procs))
+	for _, p := range procs {
 		if opts.Serial {
-			run(s, opts, wg)
+			run(p, wg)
 		} else {
-			go run(s, opts, wg)
+			go run(p, wg)
 		}
 	}
 	wg.Wait()
 }
 
-func run(s string, opts *processor.Options, wg *sync.WaitGroup) {
-	processor.Run(s, opts)
+func run(p *processor.Processor, wg *sync.WaitGroup) {
+	p.Run()
 	wg.Done()
 }
 
-func readFile(name string, verbose bool) ([]string, error) {
-	if verbose {
-		log.Printf("Processing filelist '%s", name)
-	}
-	if b, err := ioutil.ReadFile(name); err != nil {
-		log.Printf("Failed to read filelist '%s': %s", name, err)
-		return []string{}, err
-	} else {
-		names := strings.SplitAfter(string(b), "\n")
+func handleCommandLine(args []string, opts *processor.Options) ([]*processor.Processor, error) {
+	p := flags.NewParser(opts, flags.Default)
 
-		output := make([]string, 0, len(names))
-		for _, s := range names {
-			name := strings.TrimSpace(s)
-			if len(name) > 0 {
-				output = append(output, name)
-			}
-		}
-		return output, nil
+	remaining, err := p.ParseArgs(args)
+	if err != nil {
+		return nil, err
 	}
-	panic("Can't get here!")
+
+	if len(remaining) < 1 {
+		return nil, errors.New("No files targeted on command line")
+	}
+
+	if len(opts.Ext) > 0 && opts.Ext[:1] != "." {
+		opts.Ext = "." + opts.Ext
+	}
+
+	return handleRemaining(remaining, opts)
+}
+
+func handleRemaining(names []string, opts *processor.Options) ([]*processor.Processor, error) {
+	procs := make([]*processor.Processor, 0, len(names))
+	for _, s := range names {
+		if s[:1] == "@" {
+			name := s[1:]
+			p, err := handleFilelist(name, opts)
+			if err != nil {
+				return nil, err
+			}
+			procs = append(procs, p...)
+		} else {
+			procs = append(procs, processor.New(s, opts))
+		}
+	}
+	return procs, nil
+}
+
+func handleFilelist(name string, opts *processor.Options) ([]*processor.Processor, error) {
+	if opts.Verbose {
+		log.Printf("Processing filelist '%s'", name)
+	}
+	b, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.SplitAfter(string(b), "\n")
+
+	procs := make([]*processor.Processor, 0, len(lines))
+	for i, line := range lines {
+		args, err := shellquote.Split(line)
+		if err != nil {
+			return nil, fmt.Errorf("Error parsing command line in filelist '%s' line %d", name, i+1)
+		}
+		p, err := handleCommandLine(args, opts)
+		if err != nil {
+			return nil, err
+		}
+		procs = append(procs, p...)
+	}
+	return procs, nil
 }
