@@ -1,6 +1,21 @@
 gocog - generate code for any language, with any language
 =====
 
+<!-- {{{gocog
+package main
+import(
+  "os"
+  "os/exec"
+)
+func main() {
+  cmd := exec.Command("gocog", "-V")
+  cmd.Stdout = os.Stdout
+  cmd.Run()
+}
+gocog}}} -->
+gocog v1.0 build 20130201
+<!-- {{{end}}} -->
+
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
 If you don't want to work on the sourcecode, you can just download a binary for gocog and use it for your own project.<br>
