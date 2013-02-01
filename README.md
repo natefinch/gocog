@@ -112,6 +112,10 @@ You can rerun gocog over the same file multiple times. Previously generated text
 
 You can have multiple blocks of gocog generator code inside the same file.
 
+Any filename prepended with the '@' symbol in the command line will be opened and read, with each line assumed to be a gocog command line. In this way you can run different command lines over different files, even using different languages to generate code in each file.  Check out [files.txt](https://github.com/natefinch/gocog/blob/master/files.txt) for an example. This is the file that gocog uses to generate code for itself.
+
+You can include other @files inside an @file, and those will also be opened and read the same way.
+
 Current Limitations
 ----------
 
@@ -119,23 +123,20 @@ Current Limitations
 
 Todo
 ----
-Gocog is a work in progress. Here's some stuff I'll be adding soon
+Gocog is a work in progress. Here's some stuff I'll be adding sooner or later.
 
 * Support for single line gocog statements e.g. [[[gocog your_code_here gocog]]]
 * Anything commented out in [options.go](https://github.com/natefinch/gocog/blob/master/processor/options.go)
 * Better support for correct indentation
 * Pre and post-run commands
 * Support for running across an entire directory / tree
-* Support for adding command line flags to files in file lists
 * Support for standardized header and footer text for extracted generator code (to remove boilerplate)
 * Support for running different generator blocks in the same file in parallel (currently they're run serially)
 
 Examples
 ------
 Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go), [gocog.go](https://github.com/natefinch/gocog/blob/master/gocog.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
-The command line I use for gocog's own use is in [update.sh](https://github.com/natefinch/gocog/blob/master/update.sh)
-
-(I use different start and end markers so gocog won't get tripped up by my documentation that uses the same markers)
+The command line I use for gocog's own use is gocog @[files.txt](https://github.com/natefinch/gocog/blob/master/files.txt). This has different command lines for the different files, not the use of different markers for the Readme, to avoid confusion with uses of the standard markers in the text.
 
 Now for a toy example:
 Using generator code written in Go to write out properties for a C# class
