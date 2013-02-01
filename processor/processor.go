@@ -20,9 +20,7 @@ var (
 	newline byte = 10
 )
 
-// Process the given file with the given options
-// This will read the file, rewriting to a temporary file
-// then run any embedded code, using the given options
+// New creates a new Processor with the given options.
 func New(file string, opt *Options) *Processor {
 	if opt == nil {
 		opt = &Options{}
@@ -37,18 +35,25 @@ func New(file string, opt *Options) *Processor {
 	return &Processor{file, opt, logger}
 }
 
+// Processor holds the data for generating code for a specific file.
 type Processor struct {
 	File string
 	*Options
 	*log.Logger
 }
 
+// tracef will only log if verbose output is enabled.
 func (p *Processor) tracef(format string, v ...interface{}) {
 	if p.Verbose {
 		p.Printf(format, v...)
 	}
 }
 
+// Run processes the input file with the options specified.
+// This will read the file, rewriting to a temporary file
+// then run any embedded code, using the given options.
+// It cleans up and code files it writes, and only overwrites the
+// original if generation was successful.
 func (p *Processor) Run() error {
 	p.tracef("Processing file '%s'", p.File)
 
@@ -88,6 +93,9 @@ func (p *Processor) Run() error {
 	return nil
 }
 
+// tryCog encapsulates opening the original file, and creating the temporary output file.
+// If output is nil, no output file was created, otherwise output is a valid file on disk
+// that needs to be cleaned up after this function exits.
 func (p *Processor) tryCog() (output string, err error) {
 	in, err := os.Open(p.File)
 	if err != nil {
@@ -108,6 +116,7 @@ func (p *Processor) tryCog() (output string, err error) {
 	return output, p.gen(r, out)
 }
 
+// gen enacapsulates the process of generating text from an input and writing to an output.
 func (p *Processor) gen(r *bufio.Reader, w io.Writer) error {
 	firstRun := true
 	for {
@@ -128,6 +137,11 @@ func (p *Processor) gen(r *bufio.Reader, w io.Writer) error {
 	panic("Can't get here!")
 }
 
+// cogPlainText reads any plaintext up to and including the startMark.
+// If this is the first time we've read the file and we reach the end before
+// finding the start mark, we won't write anything to the output file.
+// Otherwise we'll write this plaintext back out to the output file as-is.
+// Any prefix before the startmark is returned so we can handle single line comment tags.
 func (p *Processor) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (prefix string, err error) {
 	p.tracef("cogging plaintext")
 	mark := p.StartMark + "gocog"
@@ -161,13 +175,13 @@ func (p *Processor) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (p
 		return "", err
 	}
 
-	return getPrefix(lines, mark), err
+	return getPrefix(lines[len(lines)-1], mark), err
 }
 
 // Reads lines from the reader until reaching the gocog endmark
 // Writes out the generator code to a file with the given name
 // any lines that start with whitespace and then prefix will have
-// prefix replaced by an equal number of spaces
+// the prefix removed (this is to support single line comments)
 func (p *Processor) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string) error {
 	p.tracef("cogging generator code")
 	lines, _, err := readUntil(r, "gocog"+p.EndMark)
@@ -195,6 +209,9 @@ func (p *Processor) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string
 	return nil
 }
 
+// generate writes out the generator code to a file and runs it.
+// If running the code doesn't return any errors, the output is written to the output file.
+// The file with the generator code is always deleted at the end of this function.
 func (p *Processor) generate(w io.Writer, lines []string, prefix string) error {
 	gen := fmt.Sprintf("%s_cog_%s", p.File, p.Ext)
 	defer os.Remove(gen)
@@ -221,6 +238,8 @@ func (p *Processor) generate(w io.Writer, lines []string, prefix string) error {
 	return nil
 }
 
+// runFile executes the given file with the command line specified in the Processor's options.
+// If the process exits without an error, the output is written to the writer.
 func (p *Processor) runFile(f string, w io.Writer) error {
 	cmd := p.Command
 	if strings.Contains(cmd, "%s") {
@@ -241,6 +260,7 @@ func (p *Processor) runFile(f string, w io.Writer) error {
 	return nil
 }
 
+// cogToEnd reads the old generateed code, up until the end tag. All but the last line is discarded.
 func (p *Processor) cogToEnd(r *bufio.Reader, w io.Writer) error {
 	p.tracef("cogging to end")
 	// we'll drop all but the COG_END line, so no need to keep them in memory

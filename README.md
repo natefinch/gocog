@@ -37,7 +37,9 @@ gocog}}} -->
 	  gocog [OPTIONS] [INFILE | @FILELIST] ...
 	
 	  Runs gocog over each infile. 
-	  Strings prepended with @ are assumed to be files continaing newline delimited lists of files to be processed.
+	  Strings prepended with @ are assumed to be files continaing newline delimited lists of gocog command lines.
+	  Command line options are passed to each command line in the file list, but options on the file list line
+	  will override command line options. You may have filelists specified inside filelist files.
 	
 	Help Options:
 	  -h, --help         Show this help message
@@ -176,5 +178,5 @@ Building gocog
 ---------------
 
 * just run go build or go install like a normal go package.  
-* Running update.sh will run gocog over its own files, to pick up any updates to the usage text, and to add today's date to the version number.
+* To pick up any updates to the usage text in the documentation, and to add today's date to the version number, run go install and then gocog @files.txt
 * The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile) which I won't go into how to use here.

@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	opts := &processor.Options{
+	opts := processor.Options{
 		Command:   "go",
 		Args:      []string{"run", "%s"},
 		Ext:       ".go",
@@ -31,11 +31,13 @@ func main() {
 		EndMark:   "]]]",
 	}
 
-	p := flags.NewParser(opts, flags.Default)
+	p := flags.NewParser(&opts, flags.Default)
 	p.Usage = `[OPTIONS] [INFILE | @FILELIST] ...
 
   Runs gocog over each infile. 
-  Strings prepended with @ are assumed to be files continaing newline delimited lists of gocog command lines.`
+  Strings prepended with @ are assumed to be files continaing newline delimited lists of gocog command lines.
+  Command line options are passed to each command line in the file list, but options on the file list line
+  will override command line options. You may have filelists specified inside filelist files.`
 
 	remaining, err := p.ParseArgs(os.Args[1:])
 	if err != nil {
@@ -44,7 +46,7 @@ func main() {
 	}
 
 	ver := ""
-	// {{{gocog
+	// [[[gocog
 	// package main
 	// import (
 	//   "fmt"
@@ -54,9 +56,9 @@ func main() {
 	// 	t := time.Now()
 	// 	fmt.Printf("\tver = \"%d%02d%02d\"\n", t.Year(), int(t.Month()), t.Day())
 	// }
-	// gocog}}}
-	ver = "20130125"
-	// {{{end}}}
+	// gocog]]]
+	ver = "20130201"
+	// [[[end]]]
 	if opts.Version {
 		fmt.Printf(version, ver)
 		os.Exit(0)
@@ -85,13 +87,17 @@ func main() {
 	wg.Wait()
 }
 
+// run initiates processing and then signals the waitgroup when finished
 func run(p *processor.Processor, wg *sync.WaitGroup) {
 	p.Run()
 	wg.Done()
 }
 
-func handleCommandLine(args []string, opts *processor.Options) ([]*processor.Processor, error) {
-	p := flags.NewParser(opts, flags.Default)
+// handleCommandLine parses the args into options and creates Processors from the files and filelists.
+// Will return an error if no files or filelists are on the command line.
+// args is expected not to contain the executable name.
+func handleCommandLine(args []string, opts processor.Options) ([]*processor.Processor, error) {
+	p := flags.NewParser(&opts, flags.Default)
 
 	remaining, err := p.ParseArgs(args)
 	if err != nil {
@@ -106,15 +112,15 @@ func handleCommandLine(args []string, opts *processor.Options) ([]*processor.Pro
 		opts.Ext = "." + opts.Ext
 	}
 
-	return handleRemaining(remaining, opts)
+	return handleRemaining(remaining, &opts)
 }
 
+// handleRemaining creates processors from the files and filelists with the given options.
 func handleRemaining(names []string, opts *processor.Options) ([]*processor.Processor, error) {
 	procs := make([]*processor.Processor, 0, len(names))
 	for _, s := range names {
 		if s[:1] == "@" {
-			name := s[1:]
-			p, err := handleFilelist(name, opts)
+			p, err := handleFilelist(s[1:], opts)
 			if err != nil {
 				return nil, err
 			}
@@ -126,6 +132,7 @@ func handleRemaining(names []string, opts *processor.Options) ([]*processor.Proc
 	return procs, nil
 }
 
+// handleFilelist reads the file given and handles each non-blank line as a command line for gocog.
 func handleFilelist(name string, opts *processor.Options) ([]*processor.Processor, error) {
 	if opts.Verbose {
 		log.Printf("Processing filelist '%s'", name)
@@ -138,11 +145,14 @@ func handleFilelist(name string, opts *processor.Options) ([]*processor.Processo
 
 	procs := make([]*processor.Processor, 0, len(lines))
 	for i, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
 		args, err := shellquote.Split(line)
 		if err != nil {
 			return nil, fmt.Errorf("Error parsing command line in filelist '%s' line %d", name, i+1)
 		}
-		p, err := handleCommandLine(args, opts)
+		p, err := handleCommandLine(args, *opts)
 		if err != nil {
 			return nil, err
 		}

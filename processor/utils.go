@@ -13,6 +13,7 @@ import (
 	"unicode"
 )
 
+// run executes the command with the given arguments, writing output to the given writer and errors to the logger.
 func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error {
 	errOut := bytes.Buffer{}
 	c := exec.Command(cmd, args...)
@@ -26,6 +27,9 @@ func run(cmd string, args []string, stdout io.Writer, errLog *log.Logger) error 
 	return err
 }
 
+// writeNewFile creates a new file and writes the lines to the file, stripping out the prefix if it exists.
+// This will return an error if the file already exists, or if there are any errors during creation.
+// the prefix will be removed if it is the first non-whitespace text in any line
 func writeNewFile(name string, lines []string, prefix string) error {
 	out, err := createNew(name)
 	if err != nil {
@@ -55,6 +59,8 @@ func writeNewFile(name string, lines []string, prefix string) error {
 	return nil
 }
 
+// readUntil reads and returns lines from a reader until the marker is found.
+// found is true if the marker was found. Note that found == true and err == io.EOF is possible.
 func readUntil(r *bufio.Reader, marker string) (lines []string, found bool, err error) {
 	lines = make([]string, 0, 50)
 	for err == nil {
@@ -68,6 +74,8 @@ func readUntil(r *bufio.Reader, marker string) (lines []string, found bool, err 
 	return lines, false, err
 }
 
+// findLine reads lines from a reader until the marker is found, then the line with the marker is returned.
+// found is true if the marker was found. Note that found == true and err == io.EOF is possible.
 func findLine(r *bufio.Reader, marker string) (line string, found bool, err error) {
 	for err == nil {
 		line, err = r.ReadString('\n')
@@ -80,6 +88,7 @@ func findLine(r *bufio.Reader, marker string) (line string, found bool, err erro
 	return "", false, err
 }
 
+// createNew creates a new file with the given name, returning an error if the file already exists.
 func createNew(filename string) (*os.File, error) {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if os.IsExist(err) {
@@ -88,13 +97,10 @@ func createNew(filename string) (*os.File, error) {
 	return f, err
 }
 
-func getPrefix(lines []string, mark string) string {
-	prefix := ""
-	if len(lines) > 0 {
-		prefix = lines[len(lines)-1]
-		if i := strings.Index(prefix, mark); i > -1 {
-			prefix = strings.TrimLeftFunc(prefix[:i], unicode.IsSpace)
-		}
+// getPrefix returns all the text before the given mark in the line with leftmost whitespace removed.
+func getPrefix(line, mark string) string {
+	if i := strings.Index(line, mark); i > -1 {
+		return strings.TrimLeftFunc(line[:i], unicode.IsSpace)
 	}
-	return prefix
+	return ""
 }

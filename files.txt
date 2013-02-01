@@ -1,4 +1,4 @@
 gocog.go
-doc.go
-main.go
-README.md
+doc.go --eof 
+main.go --eof
+README.md --startmark={{{ --endmark=}}}

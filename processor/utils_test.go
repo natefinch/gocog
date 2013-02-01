@@ -87,3 +87,27 @@ func TestFindLine(t *testing.T) {
 	}
 
 }
+
+type PrefixData struct {
+	input  string
+	prefix string
+}
+
+func TestGetPrefix(t *testing.T) {
+	tests := []PrefixData{
+		{"     // START", "// "},
+		{"\t #START", "#"},
+		{"START", ""},
+		{"   \t  START", ""},
+		{"//START", "//"},
+	}
+
+	marker := "START"
+	for i, test := range tests {
+		_ = i
+		prefix := getPrefix(test.input, marker)
+		if prefix != test.prefix {
+			t.Errorf("GetPrefix Test %d: incorrect prefix returned. Expected: '%s', Got: '%s'", i, test.prefix, prefix)
+		}
+	}
+}
