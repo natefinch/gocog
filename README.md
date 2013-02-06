@@ -103,7 +103,7 @@ Any non-whitespace text that precedes the gocog start mark will be treated as a 
 	# gocog]]]
 	# [[[end]]]
 
-output code:
+output code (this is what will be written to a file and run by your favorite language):
 
 	do something here
 	    and some indent
