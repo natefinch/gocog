@@ -175,3 +175,5 @@ Building gocog
 * just run go build or go install like a normal go package.  
 * To pick up any updates to the usage text in the documentation, and to add today's date to the version number, run go install and then gocog @files.txt from the root code directory.
 * The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile) which I won't go into how to use here.
+
+[![Build Status](https://travis-ci.org/natefinch/gocog.png)](https://travis-ci.org/natefinch/gocog)
