@@ -19,7 +19,7 @@ gocog v1.0 build 20130201
 gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
 If you don't want to work on the sourcecode, you can just download a binary for gocog and use it for your own project.<br>
-Binaries for popular OSes are available [on the wiki](https://github.com/natefinch/gocog/wiki)<br>
+Binaries for popular OSes are available on the [Downloads](https://github.com/natefinch/gocog/wiki/Downloads) page of the [wiki](https://github.com/natefinch/gocog/wiki)<br>
 They require no installation and have no prerequisites. Copy and go.
 
 [Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
@@ -135,8 +135,7 @@ Gocog is a work in progress. Here's some stuff I'll be adding sooner or later.
 
 Examples
 ------
-Gocog uses gocog! Check out [README.md](https://raw.github.com/natefinch/gocog/master/README.md), [main.go](https://github.com/natefinch/gocog/blob/master/main.go), [gocog.go](https://github.com/natefinch/gocog/blob/master/gocog.go) and [doc.go](https://github.com/natefinch/gocog/blob/master/doc.go) (doc.go uses single line comments as an example of how that works).
-The command line I use for gocog's own use is gocog @[files.txt](https://github.com/natefinch/gocog/blob/master/files.txt). This has different command lines for the different files, not the use of different markers for the Readme, to avoid confusion with uses of the standard markers in the text.
+Check out the [Examples](https://github.com/natefinch/gocog/wiki/Examples) page of the [wiki](https://github.com/natefinch/gocog/wiki) for real world projects using gocog, including a description of how gocog uses gocog.
 
 Now for a toy example:
 Using generator code written in Go to write out properties for a C# class
@@ -194,5 +193,5 @@ Building gocog
 ---------------
 
 * just run go build or go install like a normal go package.  
-* To pick up any updates to the usage text in the documentation, and to add today's date to the version number, run go install and then gocog @files.txt
+* To pick up any updates to the usage text in the documentation, and to add today's date to the version number, run go install and then gocog @files.txt from the root code directory.
 * The binaries posted on the wiki are generated using Dave Cheney's [go cross compile scripts](https://github.com/davecheney/golang-crosscompile) which I won't go into how to use here.
