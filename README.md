@@ -16,13 +16,9 @@ gocog}}} -->
 gocog v1.0 build 20130201
 <!-- {{{end}}} -->
 
-gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
-
-If you don't want to work on the sourcecode, you can just download a binary for gocog and use it for your own project.<br>
 Binaries for popular OSes are available on the [Downloads](https://github.com/natefinch/gocog/wiki/Downloads) page of the [wiki](https://github.com/natefinch/gocog/wiki)<br>
-They require no installation and have no prerequisites. Copy and go.
 
-[Godoc documentation](http://godoc.org/github.com/natefinch/gocog)
+If you don't want to work on the sourcecode, you can just download a binary for gocog and use it for your own project. They require no installation and have no prerequisites. Copy and go.
 
 Design of gocog is heavily based on [cog.py](http://nedbatchelder.com/code/cog/).  Many thanks to Ned Batchelder for a really great design.
 <!-- {{{gocog
@@ -77,6 +73,7 @@ gocog}}} -->
 
 How it works
 ------
+gocog is a command line executable that processes in-line code in a file and outputs the results into the same file.
 
 Code is embedded in comments in the given files, delimited thusly:
 
@@ -115,23 +112,6 @@ You can have multiple blocks of gocog generator code inside the same file.
 Any filename prepended with the '@' symbol in the command line will be opened and read, with each line assumed to be a gocog command line. In this way you can run different command lines over different files, even using different languages to generate code in each file.  Check out [files.txt](https://github.com/natefinch/gocog/blob/master/files.txt) for an example. This is the file that gocog uses to generate code for itself.
 
 You can include other @files inside an @file, and those will also be opened and read the same way.
-
-Current Limitations
-----------
-
-* All marker tags must be on different lines
-
-Todo
-----
-Gocog is a work in progress. Here's some stuff I'll be adding sooner or later.
-
-* Support for single line gocog statements e.g. [[[gocog your_code_here gocog]]]
-* Anything commented out in [options.go](https://github.com/natefinch/gocog/blob/master/processor/options.go)
-* Better support for correct indentation
-* Pre and post-run commands
-* Support for running across an entire directory / tree
-* Support for standardized header and footer text for extracted generator code (to remove boilerplate)
-* Support for running different generator blocks in the same file in parallel (currently they're run serially)
 
 Examples
 ------
