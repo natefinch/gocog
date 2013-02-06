@@ -57,7 +57,7 @@ func main() {
 	// 	fmt.Printf("\tver = \"%d%02d%02d\"\n", t.Year(), int(t.Month()), t.Day())
 	// }
 	// gocog]]]
-	ver = "20130201"
+	ver = "20130206"
 	// [[[end]]]
 	if opts.Version {
 		fmt.Printf(version, ver)

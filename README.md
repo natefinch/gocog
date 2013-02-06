@@ -13,7 +13,7 @@ func main() {
   cmd.Run()
 }
 gocog}}} -->
-gocog v1.0 build 20130201
+gocog v1.0 build 20130206
 <!-- {{{end}}} -->
 
 Binaries for popular OSes are available on the [Downloads](https://github.com/natefinch/gocog/wiki/Downloads) page of the [wiki](https://github.com/natefinch/gocog/wiki)<br>
