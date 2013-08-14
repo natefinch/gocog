@@ -1,0 +1,11 @@
+package main
+import(
+   "fmt"
+   "os"
+   "os/exec"
+)
+var _ = fmt.Print
+var _ = os.DevNull
+var _ = exec.Command
+
+func main() {
