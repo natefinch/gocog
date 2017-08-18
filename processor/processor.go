@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -134,7 +135,6 @@ func (p *Processor) gen(r *bufio.Reader, w io.Writer) error {
 			return err
 		}
 	}
-	panic("Can't get here!")
 }
 
 // cogPlainText reads any plaintext up to and including the startMark.
@@ -169,7 +169,7 @@ func (p *Processor) cogPlainText(r *bufio.Reader, w io.Writer, firstRun bool) (p
 			return "", err
 		}
 	}
-	p.tracef("Wrote %c lines to output file", len(lines))
+	p.tracef("Wrote %v lines to output file", len(lines))
 
 	if !found {
 		return "", err
@@ -198,7 +198,7 @@ func (p *Processor) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string
 			return err
 		}
 	}
-	p.tracef("Wrote %c lines to output file", len(lines))
+	p.tracef("Wrote %v lines to output file", len(lines))
 
 	if !p.Excise && len(lines) > 0 {
 		if err := p.generate(w, lines[:len(lines)-1], prefix); err != nil {
@@ -213,7 +213,13 @@ func (p *Processor) cogGeneratorCode(r *bufio.Reader, w io.Writer, prefix string
 // If running the code doesn't return any errors, the output is written to the output file.
 // The file with the generator code is always deleted at the end of this function.
 func (p *Processor) generate(w io.Writer, lines []string, prefix string) error {
-	gen := fmt.Sprintf("%s_cog_%s", p.File, p.Ext)
+	p.tracef("generating runnable code")
+	name := filepath.Base(p.File)
+	dir := filepath.Dir(p.File)
+	// prefix the name to ensure it starts with alphanumeric, this is required
+	// to be go-runnable.
+	name = "cog_" + name
+	gen := fmt.Sprintf("%s_cog_%s", filepath.Join(dir, name), p.Ext)
 	defer os.Remove(gen)
 
 	// write all but the last line to the generator file
@@ -241,6 +247,14 @@ func (p *Processor) generate(w io.Writer, lines []string, prefix string) error {
 // runFile executes the given file with the command line specified in the Processor's options.
 // If the process exits without an error, the output is written to the writer.
 func (p *Processor) runFile(f string, w io.Writer) error {
+	p.tracef("output file %v", f)
+	if p.Verbose {
+		contents, err := ioutil.ReadFile(f)
+		if err != nil {
+			return err
+		}
+		p.tracef("file contents:\n%s", contents)
+	}
 	cmd := p.Command
 	if strings.Contains(cmd, "%s") {
 		cmd = fmt.Sprintf(cmd, f)
